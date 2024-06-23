@@ -5,7 +5,7 @@ import 'game_script_functions.dart';
 
 class GameScriptComponent extends AutoDisposeComponent with GameScriptFunctions, GameScript {}
 
-mixin GameScript on AutoDispose, GameScriptFunctions {
+mixin GameScript on GameScriptFunctions {
   var script = <Future Function()>[];
 
   StreamSubscription? active;

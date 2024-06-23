@@ -1,38 +1,35 @@
-import 'package:audioplayers/audioplayers.dart';
 import 'package:dart_minilog/dart_minilog.dart';
+import 'package:flame/components.dart';
 import 'package:flame_audio/flame_audio.dart';
 
 import 'common.dart';
 
 enum Sound {
-  // asteroid_clash,
-  // block,
-  // challenge,
-  // death,
-  // drop,
-  // enemy_wave_incoming,
-  // energy_boost,
+  bomb,
+  clear,
+  death_row,
+  detonate,
+  detonated,
+  eraser,
+  excellent,
   explosion,
-  // game_on,
-  // game_over,
-  // hit,
-  // incoming,
-  // increased_fire_power,
-  // laser,
-  // launch,
-  // missile,
-  // missile_available,
-  // shot,
-  // strangeness,
-  // warning,
-  // warning_obstacles,
+  highball,
+  hiscore,
+  jamjam,
+  line,
+  multi_random,
+  placed,
+  random,
+  score,
+  selected,
+  slowdown,
 }
 
 final soundboard = Soundboard();
 
 double get musicVolume => soundboard.music * soundboard.master;
 
-class Soundboard {
+class Soundboard extends Component {
   double master = 0.3;
   double music = 0.5;
   double voice = 0.8;
@@ -49,14 +46,29 @@ class Soundboard {
     }
   }
 
+  clear(String filename) => FlameAudio.audioCache.clear(filename);
+
   preload() async {
     for (final it in Sound.values) {
       logVerbose('cache $it');
-      await FlameAudio.audioCache.load('effect/${it.name}.ogg');
+      await FlameAudio.audioCache.load('sound/${it.name}.ogg');
     }
   }
 
   int _activeSounds = 0;
+
+  final _triggered = <Sound>{};
+
+  trigger(Sound sound) => _triggered.add(sound);
+
+  @override
+  update(double dt) {
+    super.update(dt);
+    if (_triggered.isNotEmpty) {
+      _triggered.forEach(play);
+      _triggered.clear();
+    }
+  }
 
   play(Sound sound, {double? volume}) {
     if (muted) return;
@@ -85,7 +97,7 @@ class Soundboard {
         player.dispose();
       }
 
-      final it = await FlameAudio.play('effect/${sound.name}.ogg', volume: volume * master);
+      final it = await FlameAudio.play('sound/${sound.name}.ogg', volume: volume * master);
       it.setPlayerMode(PlayerMode.lowLatency);
       it.setReleaseMode(ReleaseMode.stop);
       it.onPlayerStateChanged.listen((it) {

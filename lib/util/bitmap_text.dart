@@ -12,7 +12,7 @@ class BitmapText extends PositionComponent with HasPaint, HasVisibility {
 
   BitmapText({
     required this.text,
-    Vector2? position,
+    required Vector2 position,
     BitmapFont? font,
     double scale = 1,
     Color? tint,
@@ -20,7 +20,7 @@ class BitmapText extends PositionComponent with HasPaint, HasVisibility {
   })  : font = font ?? fancyFont,
         fontScale = scale {
     if (tint != null) this.tint(tint);
-    if (position != null) this.position.setFrom(position);
+    this.position.setFrom(position);
     this.font.scale = fontScale;
     final w = this.font.lineWidth(text);
     final h = this.font.lineHeight();

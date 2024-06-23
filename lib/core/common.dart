@@ -1,17 +1,18 @@
 import 'package:flame/cache.dart';
 import 'package:flame/collisions.dart';
+import 'package:flame/components.dart';
 import 'package:flame/game.dart';
+import 'package:flame/particles.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:signals_core/signals_core.dart';
 
-final debug = signal(kDebugMode);
+bool debug = kDebugMode;
 bool dev = kDebugMode;
 
-const tps = 120;
+const tps = 60;
 
-const double gameWidth = 256;
-const double gameHeight = 320;
+const double gameWidth = 480;
+const double gameHeight = 800;
 final Vector2 gameSize = Vector2(gameWidth, gameHeight);
 
 const xCenter = gameWidth / 2;
@@ -37,33 +38,14 @@ Paint pixelPaint() => Paint()
   ..isAntiAlias = false
   ..filterQuality = FilterQuality.none;
 
-enum Screen {
-  game,
-  title,
+ParticleSystemComponent Particles(Particle root) => ParticleSystemComponent(particle: root);
+
+mixin Message {}
+
+class MouseWheel with Message {
+  final double direction;
+
+  MouseWheel(this.direction);
 }
 
-enum EffectKind {
-  explosion,
-  smoke,
-  sparkle,
-  star,
-}
-
-enum ExtraKind {
-  energy(1),
-  firePower(1),
-  missile(0.2),
-  ;
-
-  final double probability;
-
-  const ExtraKind(this.probability);
-}
-
-mixin Collector {
-  void collect(ExtraKind kind);
-}
-
-mixin Defender {
-  bool onHit([int hits = 1]);
-}
+TODO(String message) => throw UnimplementedError(message);

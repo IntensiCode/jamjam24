@@ -5,6 +5,7 @@ import 'package:flame/effects.dart';
 import 'package:list_operators/list_operators.dart';
 
 import '../core/common.dart';
+import '../core/functions.dart';
 import '../scripting/game_script_functions.dart';
 import '../util/auto_dispose.dart';
 import '../util/bitmap_font.dart';

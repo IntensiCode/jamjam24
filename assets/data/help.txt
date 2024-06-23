@@ -1,0 +1,41 @@
+INSTRUCTIONS
+============
+
+Build full rows by fitting the falling tiles together.
+
+Full rows are demolished and points are awarded. Multiple rows demolished earn you more points.
+
+Each demolished row awards you with a bouncing ball. Hit the ball with a tile to collect a bonus.
+
+Do not let the tiles pile too high! If you reach the top you lose.
+
+TOUCH CONTROLS
+==============
+
+Use quick flings to the left and right to move the tile horizontally. Fling up to rotate. Flign down to drop the tile.
+
+Use longer swipes to drag the tile multiple steps left, right or down.
+
+Change sensitivity setting in CONTROLS screen.
+
+EXTRAS
+======
+
+Red - Detonate in place
+Green - Score bonus
+Blue - New bomb
+Purple - Eraser
+Yellow/Red - Slow Down
+Rainbow - Random
+Glas Bubble - Death Row
+
+STRATEGY
+========
+
+Don't go for a hiscore too early in the game. Focus on getting the good extras. You need them in the later levels!
+
+Try to get slow downs as early as possible.
+
+Careful when playing with HIGH BALLs. You gain many extras but beware of the DEATH ROW.
+
+Try to build same colored lines and learn about the extras spawned.

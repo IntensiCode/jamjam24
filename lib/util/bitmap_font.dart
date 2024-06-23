@@ -1,9 +1,12 @@
 import 'dart:typed_data';
 import 'dart:ui';
 
+import 'package:collection/collection.dart';
+import 'package:dart_minilog/dart_minilog.dart';
 import 'package:flame/cache.dart';
 import 'package:flame/components.dart';
-import 'package:list_operators/list_operators.dart';
+import 'package:flame/extensions.dart';
+import 'package:flame/sprite.dart';
 
 import '../core/common.dart';
 
@@ -13,6 +16,8 @@ extension BitmapFontExtensions on BitmapFont {
   }
 
   List<String> reflow(String text, int maxWidth, {double scale = 1}) {
+    if (text.isEmpty) return [text]; // preserve paragraphs
+
     this.scale = scale;
 
     final lines = <String>[];
@@ -47,30 +52,74 @@ abstract class BitmapFont {
     Images images,
     AssetsCache assets,
     String filename, {
-    required int charWidth,
-    required int charHeight,
+    required int columns,
+    required int rows,
   }) async {
     final image = await images.load(filename);
-    final dst = await assets.readBinaryFile(
-      filename.replaceFirst('.png', '.dst'),
-    );
+    final charWidth = image.width ~/ columns;
+    final charHeight = image.height ~/ rows;
+
+    late final Uint8List dst;
+    try {
+      dst = await _loadDst(assets, filename);
+    } catch (e, trace) {
+      logError('Failed to load bitmap font dst: $e', trace);
+      dst = await _createDst(image, charWidth, charHeight, columns);
+    }
     return DstBitmapFont(image, dst, charWidth, charHeight);
+  }
+
+  static Future<Uint8List> _loadDst(AssetsCache assets, String filename) async {
+    final hex = await assets.readFile(filename.replaceFirst('.png', '.dst'));
+    final all = hex.split(RegExp(r'[\r\n ]+'));
+    all.removeLast();
+    final widths = all.map((it) => int.parse('0x$it'.trim()));
+    return Uint8List.fromList(widths.toList());
+  }
+
+  static Future<Uint8List> _createDst(Image image, int charWidth, int charHeight, int columns) async {
+    final sheet = SpriteSheet(image: image, srcSize: Vector2(charWidth.toDouble(), charHeight.toDouble()));
+    final sprites = List.generate(sheet.columns * sheet.rows, (i) => sheet.getSpriteById(i));
+    final result = <int>[];
+    for (final it in sprites) {
+      final char = it.toImageSync();
+      final pixels = await char.pixelsInUint8();
+      final rows = pixels.slices((it.srcSize.x * 4).toInt());
+      final widths = rows.map((row) => row.lastIndexWhere((char_code) => char_code != 0) ~/ 4);
+      result.add(widths.max.toInt());
+    }
+
+    final dump = result.slices(columns).map((row) => (row.map((it) => it.toRadixString(16).padLeft(2, '0')).join(' ')));
+    logInfo('\n${dump.join('\n')}\n');
+
+    return Uint8List.fromList(result);
   }
 
   double scale = 1;
   double lineSpacing = 2;
+  abstract double spacing;
   Paint paint = pixelPaint();
 
   Vector2 textSize(String text) {
     final lines = text.split('\n');
     final h = lineHeight(scale) * lines.length;
-    final w = lines.map((it) => lineWidth(it)).max();
+    final w = lines.map((it) => lineWidth(it)).max;
     return Vector2(w, h);
   }
+
+  Sprite sprite(int charCode);
+
+  double charWidth(int charCode, [double scale = 1]);
 
   double lineHeight([double scale = 1]);
 
   double lineWidth(String line);
+
+  drawStringAligned(Canvas canvas, double x, double y, String text, Anchor anchor) {
+    final w = lineWidth(text);
+    final h = lineHeight();
+    drawString(canvas, x - (w * anchor.x), y - (h * anchor.y), text);
+  }
 
   drawString(Canvas canvas, double x, double y, String string);
 
@@ -83,7 +132,12 @@ class MonospacedBitmapFont extends BitmapFont {
   final int _charHeight;
   final int _charsPerRow;
 
-  MonospacedBitmapFont(this._image, this._charWidth, this._charHeight) : _charsPerRow = _image.width ~/ _charWidth;
+  @override
+  late double spacing;
+
+  MonospacedBitmapFont(this._image, this._charWidth, this._charHeight) : _charsPerRow = _image.width ~/ _charWidth {
+    spacing = (_charWidth * 0.1).roundToDouble();
+  }
 
   final _cache = <int, Rect>{};
 
@@ -107,10 +161,19 @@ class MonospacedBitmapFont extends BitmapFont {
       );
 
   @override
+  Sprite sprite(int charCode) {
+    final rect = _cachedSrc(charCode);
+    return Sprite(_image, srcPosition: rect.topLeft.toVector2(), srcSize: rect.size.toVector2());
+  }
+
+  @override
+  double charWidth(int charCode, [double scale = 1]) => _charWidth * scale;
+
+  @override
   double lineHeight([double scale = 1]) => _charHeight * scale;
 
   @override
-  double lineWidth(String line) => line.length * _charWidth * scale;
+  double lineWidth(String line) => line.length * (_charWidth * scale + spacing * scale) - spacing * scale;
 
   @override
   drawString(Canvas canvas, double x, double y, String string) {
@@ -118,7 +181,7 @@ class MonospacedBitmapFont extends BitmapFont {
       final src = _cachedSrc(c);
       final dst = _dst(x, y);
       canvas.drawImageRect(_image, src, dst, paint);
-      x += _charWidth * scale;
+      x += _charWidth * scale + spacing * scale;
     }
   }
 
@@ -139,14 +202,20 @@ class DstBitmapFont extends BitmapFont {
   final int _charHeight;
   final int _charsPerRow;
 
-  DstBitmapFont(this._image, this._dst, this._charWidth, this._charHeight) : _charsPerRow = _image.width ~/ _charWidth;
+  @override
+  late double spacing;
+
+  DstBitmapFont(this._image, this._dst, this._charWidth, this._charHeight) : _charsPerRow = _image.width ~/ _charWidth {
+    spacing = (_charWidth * 0.1).roundToDouble();
+  }
 
   final _cache = <int, Rect>{};
 
   Rect _cachedSrc(int charCode) => _cache.putIfAbsent(charCode, () {
         final x = (charCode - 32) % _charsPerRow;
         final y = (charCode - 32) ~/ _charsPerRow;
-        final width = _dst[charCode - 32];
+        var width = _dst[charCode - 32];
+        if (width == 0) width = _charWidth ~/ 2;
         final rect = Rect.fromLTWH(
           x.toDouble() * _charWidth,
           y.toDouble() * _charHeight,
@@ -164,16 +233,25 @@ class DstBitmapFont extends BitmapFont {
       );
 
   @override
+  Sprite sprite(int charCode) {
+    final rect = _cachedSrc(charCode);
+    return Sprite(_image, srcPosition: rect.topLeft.toVector2(), srcSize: rect.size.toVector2());
+  }
+
+  @override
+  double charWidth(int charCode, [double scale = 1]) => _cachedSrc(charCode).width * scale;
+
+  @override
   double lineHeight([double scale = 1]) => _charHeight * scale;
 
   @override
   double lineWidth(String line) {
     double x = 0;
     for (final c in line.codeUnits) {
-      final src = _cachedSrc(c);
-      x += src.width * scale;
+      final src = charWidth(c, scale);
+      x += src + spacing * scale;
     }
-    return x;
+    return x - spacing * scale;
   }
 
   @override
@@ -182,7 +260,7 @@ class DstBitmapFont extends BitmapFont {
       final src = _cachedSrc(c);
       final dst = _dstRect(x, y, src.width);
       canvas.drawImageRect(_image, src, dst, paint);
-      x += src.width * scale;
+      x += src.width * scale + spacing * scale;
     }
   }
 

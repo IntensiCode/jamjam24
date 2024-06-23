@@ -25,7 +25,7 @@ class DebugCircleHitbox extends CircleComponent with HasVisibility {
   }
 
   @override
-  bool get isVisible => debug.value;
+  bool get isVisible => debug;
 }
 
 class DebugText extends TextComponent with HasVisibility {
@@ -37,7 +37,7 @@ class DebugText extends TextComponent with HasVisibility {
   late final String Function() _text;
 
   @override
-  bool get isVisible => debug.value;
+  bool get isVisible => debug;
 
   @override
   void render(Canvas canvas) {

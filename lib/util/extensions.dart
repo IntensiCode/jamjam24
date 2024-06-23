@@ -3,43 +3,35 @@ import 'dart:ui';
 
 import 'package:flame/components.dart';
 import 'package:flame/effects.dart';
-
-import '../core/common.dart';
-import '../core/messaging.dart';
+import 'package:flame/sprite.dart';
 
 extension ComponentExtension on Component {
-  void showScreen(Screen it) => messaging.send(ShowScreen(it));
-
   T added<T extends Component>(T it) {
     add(it);
     return it;
   }
 
-  void fadeInDeep({double seconds = 0.4, bool restart = true}) {
+  void fadeInDeep({double seconds = 0.2, bool restart = true}) {
     if (this case OpacityProvider it) {
       if (it.opacity == 1 && !restart) return;
       if (it.opacity > 0 && restart) it.opacity = 0;
       add(OpacityEffect.to(1, EffectController(duration: seconds)));
-    } else {
-      for (final it in children) {
-        if (it is! OpacityProvider) continue;
-        it.fadeInDeep(seconds: seconds, restart: restart);
-      }
+    }
+    for (final it in children) {
+      it.fadeInDeep(seconds: seconds, restart: restart);
     }
   }
 
-  void fadeOutDeep({double seconds = 0.4, bool restart = false, bool andRemove = true}) {
+  void fadeOutDeep({double seconds = 0.2, bool restart = false, bool and_remove = true}) {
     if (this case OpacityProvider it) {
       if (it.opacity == 0 && !restart) return;
       if (it.opacity < 1 && restart) it.opacity = 1;
       add(OpacityEffect.to(0, EffectController(duration: seconds)));
-    } else {
-      for (final it in children) {
-        if (it is! OpacityProvider) continue;
-        it.fadeOutDeep(seconds: seconds, restart: restart);
-      }
     }
-    if (andRemove) add(RemoveEffect(delay: seconds));
+    for (final it in children) {
+      it.fadeOutDeep(seconds: seconds, restart: restart, and_remove: false);
+    }
+    if (and_remove) add(RemoveEffect(delay: seconds));
   }
 
   void runScript(List<(int, void Function())> script) {
@@ -68,7 +60,22 @@ extension DynamicListExtensions on List<dynamic> {
   void rotateRight() => insert(0, removeLast());
 }
 
+extension IterableExtensions<T> on Iterable<T> {
+  List<R> mapList<R>(R Function(T) f) => map(f).toList();
+}
+
 extension ListExtensions<T> on List<T> {
+  void fill(T it) => fillRange(0, length, it);
+
+  List<R> mapList<R>(R Function(T) f) => map(f).toList();
+
+  T? nextAfter(T? it) {
+    if (it == null) return firstOrNull;
+    final index = indexOf(it);
+    if (index == -1) return null;
+    return this[(index + 1) % length];
+  }
+
   void removeAll(Iterable<T> other) {
     for (final it in other) {
       remove(it);
@@ -107,10 +114,20 @@ extension IntExtensions on int {
   }
 }
 
+extension StringExtensions on String {
+  List<String> lines() => split('\n');
+}
+
 extension Vector3Extension on Vector3 {
   void lerp(Vector3 other, double t) {
     x = x + (other.x - x) * t;
     y = y + (other.y - y) * t;
     z = z + (other.z - z) * t;
   }
+}
+
+extension SpriteSheetExtensions on SpriteSheet {
+  Sprite by_row(int row, double progress) => getSprite(row, (columns - 1) * progress.toInt());
+
+  Sprite by_progress(double progress) => getSpriteById(((columns - 1) * progress).toInt());
 }

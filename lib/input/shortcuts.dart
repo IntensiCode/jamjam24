@@ -9,6 +9,10 @@ import '../util/auto_dispose.dart';
 mixin HasAutoDisposeShortcuts on Component, AutoDispose {
   void onKey(String pattern, void Function() callback) =>
       autoDispose('key-$pattern', shortcuts.onKey(pattern, callback));
+
+  void onKeys(List<String> patterns, void Function() callback) {
+    patterns.forEach((it) => onKey(it, callback));
+  }
 }
 
 extension ComponentExtension on Component {
@@ -53,6 +57,7 @@ mixin Shortcuts<T extends World> on HasKeyboardHandlerComponents<T> {
 
       var pattern = event.character ?? label;
       if (pattern == ' ') pattern = 'Space';
+      pattern = pattern.replaceFirst('Arrow ', '');
 
       if (label.length > 1) pattern = label;
 
@@ -63,6 +68,18 @@ mixin Shortcuts<T extends World> on HasKeyboardHandlerComponents<T> {
         pattern = "<$pattern>";
       }
 
+      bool handled = false;
+      final cloned = [...handlers];
+      for (final it in cloned) {
+        if (it.$1 == pattern) {
+          it.$2();
+          handled = true;
+        }
+      }
+      if (handled) return KeyEventResult.skipRemainingHandlers;
+    } else if (event is KeyDownEvent) {
+      var pattern = '<${event.logicalKey.keyLabel}>';
+      pattern = pattern.replaceFirst('Arrow ', '');
       bool handled = false;
       final cloned = [...handlers];
       for (final it in cloned) {

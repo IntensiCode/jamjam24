@@ -5,13 +5,12 @@ import 'package:audioplayers/audioplayers.dart';
 import 'package:dart_minilog/dart_minilog.dart';
 import 'package:flame/components.dart';
 import 'package:flame/effects.dart';
-import 'package:flame/sprite.dart';
 import 'package:flutter/animation.dart';
 import 'package:flutter/foundation.dart';
 import 'package:signals_core/signals_core.dart';
 
 import '../core/common.dart';
-import '../core/messaging.dart';
+import '../core/functions.dart';
 import '../core/soundboard.dart';
 import '../util/auto_dispose.dart';
 import '../util/bitmap_button.dart';
@@ -29,12 +28,6 @@ import 'subtitles_component.dart';
 mixin GameScriptFunctions on Component, AutoDispose {
   int _autoDisposeCount = 0;
 
-  @override
-  onRemove() {
-    super.onRemove();
-    disposeAll();
-  }
-
   void autoEffect(String hint, void Function() callback) {
     autoDispose(
       'autoEffect-$_autoDisposeCount-$hint',
@@ -45,14 +38,6 @@ mixin GameScriptFunctions on Component, AutoDispose {
       ),
     );
     _autoDisposeCount++;
-  }
-
-  void sendMessage<T extends Message>(T message) => messaging.send(message);
-
-  Disposable onMessage<T extends Message>(void Function(T) callback) {
-    final listen = messaging.listen<T>(callback);
-    autoDispose('listen-$T', listen);
-    return listen;
   }
 
   void clearByType(List types) {
@@ -70,7 +55,7 @@ mixin GameScriptFunctions on Component, AutoDispose {
     return added(DebugText(text: text, position: Vector2(x, y), anchor: anchor, scale: scale));
   }
 
-  T fadeIn<T extends Component>(T it, {double duration = 1}) {
+  T fadeIn<T extends Component>(T it, {double duration = 0.2}) {
     it.fadeInDeep(seconds: duration);
     return it;
   }
@@ -83,21 +68,6 @@ mixin GameScriptFunctions on Component, AutoDispose {
     fontScale = scale;
   }
 
-  Future<Image> image(String filename) => images.load(filename);
-
-  Future<SpriteSheet> sheetIWH(String filename, int frameWidth, int frameHeight) async {
-    var img = await image(filename);
-    final columns = img.width ~/ frameWidth;
-    final rows = img.height ~/ frameHeight;
-    return SpriteSheet.fromColumnsAndRows(image: img, columns: columns, rows: rows);
-  }
-
-  Future<SpriteSheet> sheetI(String filename, int columns, int rows) async =>
-      SpriteSheet.fromColumnsAndRows(image: await image(filename), columns: columns, rows: rows);
-
-  SpriteSheet sheet(Image image, int columns, int rows) =>
-      SpriteSheet.fromColumnsAndRows(image: image, columns: columns, rows: rows);
-
   Future<SpriteComponent> sprite({
     required String filename,
     Vector2? position,
@@ -108,20 +78,6 @@ mixin GameScriptFunctions on Component, AutoDispose {
   SubtitlesComponent subtitles(String text, double? autoClearSeconds, {String? image, String? audio}) {
     if (audio != null) soundboard.playAudio(audio);
     return added(SubtitlesComponent(text, autoClearSeconds, image));
-  }
-
-  Future<SpriteComponent> loadSprite(
-    String filename, {
-    Vector2? position,
-    Vector2? size,
-    Anchor? anchor,
-  }) async {
-    return SpriteComponent(
-      sprite: await game.loadSprite(filename),
-      position: position,
-      size: size,
-      anchor: anchor,
-    );
   }
 
   SpriteComponent spriteSXY(Sprite sprite, double x, double y, [Anchor anchor = Anchor.center]) =>
@@ -141,57 +97,24 @@ mixin GameScriptFunctions on Component, AutoDispose {
     children.whereType<T>().forEach((it) => it.fadeOutDeep(restart: reset));
   }
 
-  void fadeOutAll([double duration = 1]) {
+  void fadeOutAll([double duration = 0.2]) {
     for (final it in children) {
       it.fadeOutDeep(seconds: duration);
     }
   }
 
-  Future<SpriteAnimation> loadAnimWH(
+  Future<SpriteAnimationComponent> makeAnimCRXY(
     String filename,
-    int frameWidth,
-    int frameHeight, [
+    int columns,
+    int rows,
+    double x,
+    double y, {
+    Anchor anchor = Anchor.center,
+    bool loop = true,
     double stepTime = 0.1,
-    bool loop = true,
-  ]) async {
-    final image = await images.load(filename);
-    final columns = image.width ~/ frameWidth;
-    if (columns * frameWidth != image.width) {
-      throw ArgumentError('image width ${image.width} / frame width $frameWidth');
-    }
-    final rows = image.height ~/ frameHeight;
-    if (rows * frameHeight != image.height) {
-      throw ArgumentError('image height ${image.height} / frame height $frameHeight');
-    }
-    return SpriteAnimation.fromFrameData(
-        image,
-        SpriteAnimationData.sequenced(
-          amount: columns * rows,
-          amountPerRow: columns,
-          stepTime: stepTime,
-          textureSize: Vector2(frameWidth.toDouble(), frameHeight.toDouble()),
-          loop: loop,
-        ));
-  }
-
-  Future<SpriteAnimation> loadAnim(
-    String filename, {
-    required int frames,
-    required double stepTimeSeconds,
-    required num frameWidth,
-    required num frameHeight,
-    bool loop = true,
   }) async {
-    final frameSize = Vector2(frameWidth.toDouble(), frameHeight.toDouble());
-    return game.loadSpriteAnimation(
-      filename,
-      SpriteAnimationData.sequenced(
-        amount: frames.toInt(),
-        stepTime: stepTimeSeconds.toDouble(),
-        textureSize: frameSize,
-        loop: loop,
-      ),
-    );
+    final animation = await loadAnimCR(filename, columns, rows, stepTime, loop);
+    return makeAnim(animation, Vector2(x, y), anchor);
   }
 
   SpriteAnimationComponent makeAnimXY(SpriteAnimation animation, double x, double y, [Anchor anchor = Anchor.center]) =>
@@ -253,7 +176,7 @@ mixin GameScriptFunctions on Component, AutoDispose {
     autoDispose('backgroundMusic_fadeIn', player.fadeIn(musicVolume, seconds: 3));
   }
 
-  void playAudio(String filename) async {
+  Future playAudio(String filename) async {
     final player = await soundboard.playAudio(filename);
     autoDispose('playAudio', () => player.stop());
   }
@@ -272,7 +195,7 @@ mixin GameScriptFunctions on Component, AutoDispose {
 
   BitmapText text({
     required String text,
-    Vector2? position,
+    required Vector2 position,
     Anchor? anchor,
     double? scale,
   }) {

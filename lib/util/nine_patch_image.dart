@@ -6,7 +6,7 @@ import 'package:flame/extensions.dart';
 
 import '../core/common.dart';
 
-class NinePatchComponent extends PositionComponent {
+class NinePatchComponent extends PositionComponent with HasPaint {
   final Image image;
   final int cornerSize;
 
@@ -15,8 +15,8 @@ class NinePatchComponent extends PositionComponent {
     this.cornerSize = 8,
     Vector2? position,
     required Vector2 size,
+    super.anchor,
   }) {
-    logInfo(size);
     if (position != null) this.position = position;
     this.size = size;
   }

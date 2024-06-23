@@ -62,11 +62,19 @@ Disposable _wrap(something) {
 /// specific ones individually. Uses [String] tags to identify disposables. By assigning a new
 /// disposable using the same tag, any previously assigned disposable for the same tag is
 /// auto-disposed. Therefore, effectively replacing the previous disposable.
-mixin AutoDispose {
+mixin AutoDispose on Component {
   final _disposables = <String, Disposable>{};
+
+  @override
+  void onRemove() {
+    super.onRemove();
+    logInfo('onRemove for $runtimeType');
+    disposeAllDeep();
+  }
 
   /// Dispose all [Disposable]s currently registered with this [AutoDispose] instance.
   void disposeAll() {
+    logVerbose('dispose all on $runtimeType');
     if (_disposables.isNotEmpty) {
       logVerbose('disposing ${_disposables.keys}');
     }
@@ -91,15 +99,21 @@ mixin AutoDispose {
   /// has an unsupported type. In that case, wrap it into a [Disposable] before passing it to
   /// [autoDispose].
   void autoDispose(String tag, dynamic something) {
+    logVerbose('register $tag on $runtimeType');
     dispose(tag);
     _disposables[tag] = _wrap(something);
   }
 }
 
-class AutoDisposeComponent extends Component with AutoDispose {
-  @override
-  void onRemove() {
-    super.onRemove();
-    disposeAll();
+class AutoDisposeComponent extends Component with AutoDispose {}
+
+extension ComponentExtension on Component {
+  void disposeAllDeep() {
+    bool dispose(Component it) {
+      if (it case AutoDispose ad) ad.disposeAll();
+      return true;
+    }
+
+    propagateToChildren(dispose, includeSelf: true);
   }
 }

@@ -4,25 +4,32 @@ import 'package:flame/events.dart';
 import 'package:flame/game.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart' hide Image, Shortcuts;
+import 'package:jamjam24/web_play_screen.dart';
 
 import 'core/common.dart';
 import 'core/messaging.dart';
+import 'core/screens.dart';
 import 'core/soundboard.dart';
-import 'game_screen.dart';
-import 'game_world.dart';
 import 'input/shortcuts.dart';
-import 'util/extensions.dart';
+import 'main_controller.dart';
 import 'util/fonts.dart';
 import 'util/performance.dart';
 
-class JamJam24 extends FlameGame<GameWorld>
-    with HasKeyboardHandlerComponents, Messaging, Shortcuts, HasPerformanceTracker {
-  //
+class JamJam24 extends FlameGame<MainController>
+    with HasKeyboardHandlerComponents, Messaging, Shortcuts, HasPerformanceTracker, ScrollDetector {
   final _ticker = Ticker(ticks: tps);
 
-  void _showInitialScreen() => world.add(GameScreen());
+  void _showInitialScreen() {
+    if (debug) {
+      world.showScreen(Screen.game);
+    } else if (kIsWeb) {
+      world.add(WebPlayScreen());
+    } else {
+      world.showScreen(Screen.loading, skip_fade_in: true);
+    }
+  }
 
-  JamJam24() : super(world: GameWorld()) {
+  JamJam24() : super(world: MainController()) {
     game = this;
     images = this.images;
 
@@ -59,10 +66,12 @@ class JamJam24 extends FlameGame<GameWorld>
     await soundboard.preload();
     await loadFonts(assets);
 
+    add(soundboard);
+
     _showInitialScreen();
 
-    onKey('m', () => soundboard.toggleMute());
-    onKey('t', () => showScreen(Screen.title));
+    // onKey('m', () => soundboard.toggleMute());
+    // onKey('t', () => showScreen(Screen.title));
 
     if (dev) {
       onKey('<C-d>', () => _toggleDebug());
@@ -76,7 +85,7 @@ class JamJam24 extends FlameGame<GameWorld>
   }
 
   _toggleDebug() {
-    debug.value = !debug.value;
+    debug = !debug;
     return KeyEventResult.handled;
   }
 
@@ -88,8 +97,15 @@ class JamJam24 extends FlameGame<GameWorld>
     if (_timeScale < 4.0) _timeScale *= 2;
   }
 
+  double _timeScale = 1;
+
   @override
   update(double dt) => _ticker.generateTicksFor(dt * _timeScale, (it) => super.update(it));
 
-  double _timeScale = 1;
+  @override
+  void onScroll(PointerScrollInfo info) {
+    super.onScroll(info);
+    if (info.scrollDelta.global.y == 0) return;
+    send(MouseWheel(info.scrollDelta.global.y.sign));
+  }
 }
