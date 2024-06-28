@@ -33,6 +33,10 @@ Controls (at the time of this writing):
 - Controls (Info) Screen
 - Audio Screen (Play Music and Disable Sounds)
 
+### Playable Web Version
+
+https://intensicode.github.io/jamjam24/
+
 ### Screenshots
 
 ![Demo](images/demo.gif)

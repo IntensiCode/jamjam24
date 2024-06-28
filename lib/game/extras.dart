@@ -1,6 +1,7 @@
 import 'dart:math';
 import 'dart:ui';
 
+import 'package:dart_minilog/dart_minilog.dart';
 import 'package:flame/components.dart';
 
 import '../core/common.dart';
@@ -17,6 +18,8 @@ import 'placed_tile.dart';
 class Extras extends GameParticles<Extra> {
   Extras() : super(Extra.new);
 
+  bool drop_all_next_tick = false;
+
   spawn_in_row(final int row, final int clear_size) {
     final id = ExtraId.pick_random(clear_size);
     final x = rng.nextDoubleLimit(container.width - 1) + 0.5;
@@ -27,6 +30,12 @@ class Extras extends GameParticles<Extra> {
   void spawn(ExtraId id, double x, double y) => require_particle().init(id, x, y);
 
   @override
+  void on_start_new_game() {
+    super.on_start_new_game();
+    drop_all_next_tick = false;
+  }
+
+  @override
   void update(double dt) {
     for (final it in particles) {
       if (it.active && !it.isMounted) add(it);
@@ -34,6 +43,16 @@ class Extras extends GameParticles<Extra> {
     super.update(dt);
     for (final it in particles) {
       if (!it.active && it.isMounted) remove(it);
+    }
+    if (drop_all_next_tick) {
+      logInfo('drop all');
+      drop_all_next_tick = false;
+      for (final it in ExtraId.values) {
+        if (it == ExtraId.random) continue;
+        final x = rng.nextInt(container.width - 1) + 0.5;
+        final y = visual.high_ball_y / 2;
+        require_particle().drop_extra(it, x, y);
+      }
     }
   }
 
@@ -55,6 +74,11 @@ class Extra extends Component with HasGameData, GameParticle, ManagedGameParticl
   late double _speed_x;
   late double _speed_y;
   late bool _erase_blocks;
+
+  void drop_extra(ExtraId id, double x, double y) {
+    init(id, x, y);
+    _speed_y = _fall_speed * 2 / 3 + rng.nextDoubleLimit(_fall_speed / 2);
+  }
 
   void init(ExtraId id, double x, double y) {
     _id = id;
@@ -107,7 +131,7 @@ class Extra extends Component with HasGameData, GameParticle, ManagedGameParticl
   void update_while_active() {
     if (_erase_blocks) _on_erase_blocks();
     _bounce();
-    _check_high_ball();
+    if (_id == ExtraId.random) _check_high_ball();
   }
 
   // HasGameData
@@ -220,24 +244,11 @@ class Extra extends Component with HasGameData, GameParticle, ManagedGameParticl
   }
 
   void _check_high_ball() {
-    if (y > 1 || _id != ExtraId.random) return;
-    y = 1;
+    if (y > visual.high_ball_y) return;
     _show_extra_info('HIGH BALL');
     soundboard.trigger(Sound.highball);
-    _drop_all_extras();
+    extras.drop_all_next_tick = true;
     reset();
-  }
-
-  void _drop_all_extras() {
-    for (final it in ExtraId.values) {
-      if (it != ExtraId.random) _drop_extra(it);
-    }
-  }
-
-  void _drop_extra(ExtraId id) {
-    final extra = extras.require_particle();
-    extra.init(id, x, y);
-    extra._speed_y = _fall_speed * 2 / 3 + rng.nextDoubleLimit(_fall_speed / 2);
   }
 
   void _show_extra_info(String text) => letters.pop_up_text(text, x, y);

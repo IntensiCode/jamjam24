@@ -27,7 +27,7 @@ class GameConfiguration {
   int lines_delta_per_level = -1;
   int max_lines_to_clear = 20;
   int min_lines_to_clear = 5;
-  int slow_down_in_millis = 8;
+  int slow_down_in_millis = 3;
   int tile_drop_delay_in_millis = 25;
   int tile_step_delay_in_millis = 750;
   int tile_step_interval_in_millis = 50;

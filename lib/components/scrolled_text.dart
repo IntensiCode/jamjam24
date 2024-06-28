@@ -1,8 +1,10 @@
 import 'package:collection/collection.dart';
 import 'package:flame/components.dart';
 import 'package:flame/events.dart';
+import 'package:flutter/cupertino.dart';
 
 import '../core/common.dart';
+import '../game/keys.dart';
 import '../input/shortcuts.dart';
 import '../scripting/game_script_functions.dart';
 import '../util/auto_dispose.dart';
@@ -14,8 +16,9 @@ import '../util/mouse_wheel_scrolling.dart';
 import '../util/on_message.dart';
 
 class ScrolledText extends PositionComponent
-    with AutoDispose, GameScriptFunctions, HasAutoDisposeShortcuts, DragCallbacks, MouseWheelScrolling {
+    with AutoDispose, GameScriptFunctions, DragCallbacks, MouseWheelScrolling {
   //
+  late final Keys _keys;
   late final List<String> _lines;
   late final int _visible_lines;
   late final int _max_scroll;
@@ -34,6 +37,7 @@ class ScrolledText extends PositionComponent
     super.scale,
   })  : _font = font,
         super(size: size) {
+    add(_keys = Keys());
     //
     _lines = text.lines().map((it) => _font.reflow(it, (size.x - _font.lineWidth(' ')).toInt())).flattened.toList();
 
@@ -84,9 +88,16 @@ class ScrolledText extends PositionComponent
   @override
   void onMount() {
     super.onMount();
-    onKeys(['k', '<Up>'], () => _scroll_up());
-    onKeys(['j', '<Down>'], () => _scroll_down());
+    // onKeys(['k', '<Up>'], () => _scroll_up());
+    // onKeys(['j', '<Down>'], () => _scroll_down());
     onMessage<MouseWheel>((it) => it.direction < 0 ? _scroll_up() : _scroll_down());
+  }
+
+  @override
+  update(double dt) {
+    super.update(dt);
+    if (_keys.check_and_consume(GameKey.up)) _scroll_up();
+    if (_keys.check_and_consume(GameKey.down)) _scroll_down();
   }
 
   int _scroll_pos = 0;

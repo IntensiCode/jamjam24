@@ -1,3 +1,4 @@
+import 'package:dart_minilog/dart_minilog.dart';
 import 'package:flame/components.dart';
 import 'package:flame/sprite.dart';
 
@@ -59,16 +60,16 @@ class BasicMenu<T> extends PositionComponent with AutoDispose, HasAutoDisposeSho
     }
   }
 
-  addEntry(T id, String text) {
-    _entries.add((
-      id,
-      BasicMenuButton(
-        text,
-        sheet: buttonSheet,
-        font: font,
-        onTap: () => onSelected(id),
-      )
-    ));
+  BasicMenuButton addEntry(T id, String text, {Anchor anchor = Anchor.center}) {
+    final it = BasicMenuButton(
+      text,
+      sheet: buttonSheet,
+      font: font,
+      onTap: () => onSelected(id),
+      text_anchor: anchor,
+    );
+    _entries.add((id, it));
+    return it;
   }
 
   T? _preselected;

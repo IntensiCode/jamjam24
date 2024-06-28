@@ -1,3 +1,4 @@
+import 'package:dart_minilog/dart_minilog.dart';
 import 'package:flame/components.dart';
 import 'package:flame/effects.dart';
 import 'package:flame/events.dart';
@@ -19,13 +20,19 @@ class BasicMenuButton extends SpriteComponent with HasVisibility, TapCallbacks {
     required this.font,
     required this.onTap,
     bool selected = false,
+    Anchor text_anchor = Anchor.center,
   }) {
     this.selected = selected;
+    final p = Vector2.copy(size);
+    p.x -= 12;
+    p.x *= text_anchor.x;
+    p.y *= text_anchor.y;
+    p.x += 6;
     add(BitmapText(
       text: text,
-      position: size / 2,
+      position: p,
       font: font,
-      anchor: Anchor.center,
+      anchor: text_anchor,
     ));
   }
 
@@ -42,8 +49,22 @@ class BasicMenuButton extends SpriteComponent with HasVisibility, TapCallbacks {
     }
   }
 
-  @override
-  void onTapUp(TapUpEvent event) {
-    onTap();
+  BitmapText? _checked;
+
+  set checked(bool value) {
+    logInfo(value);
+    _checked?.removeFromParent();
+    final p = Vector2.copy(size);
+    p.x -= 6;
+    p.y = size.y / 2;
+    _checked = added(BitmapText(
+      text: value ? 'ON' : 'OFF',
+      position: p,
+      font: font,
+      anchor: Anchor.centerRight,
+    ));
   }
+
+  @override
+  void onTapUp(TapUpEvent event) => onTap();
 }

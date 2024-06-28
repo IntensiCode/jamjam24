@@ -1,3 +1,4 @@
+import 'package:dart_minilog/dart_minilog.dart';
 import 'package:flame/components.dart';
 
 import '../core/common.dart';
@@ -173,7 +174,13 @@ class Player extends Component with GameObject {
     final slow_down_millis = configuration.slow_down_in_millis * _slow_down;
     final slow_down_factor = slow_down_millis / 1000;
     final step_delay_fixed = level.step_delay_in_seconds + slow_down_factor;
+    final was = _step_delay;
     _step_delay = (step_delay_fixed * tps).toInt();
+    if (_step_delay != was) {
+      logInfo('update step delay: $_step_delay (ticks)');
+      logInfo('step_delay_in_seconds = ${level.step_delay_in_seconds}');
+      logInfo('slow_down_factor = $slow_down_factor');
+    }
   }
 
   void _control_using_keys() {

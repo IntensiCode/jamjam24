@@ -1,3 +1,5 @@
+import 'package:dart_minilog/dart_minilog.dart';
+
 import '../components/soft_keys.dart';
 import '../scripting/game_script.dart';
 import '../util/on_message.dart';
@@ -20,7 +22,17 @@ class GamePlayOverlays extends GameScriptComponent {
     _on_game_state(model.state);
   }
 
+  @override
+  void update(double dt) {
+    super.update(dt);
+    if (model.state != seen) _on_game_state(model.state);
+  }
+
+  GameState? seen;
+
   void _on_game_state(GameState it) {
+    seen = it;
+    logInfo('on_game_state: $it');
     switch (it) {
       case GameState.start_game:
         _on_start_new_game();

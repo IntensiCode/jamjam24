@@ -1,5 +1,6 @@
 import 'package:dart_minilog/dart_minilog.dart';
 import 'package:flame/components.dart';
+import 'package:jamjam24/components/soft_keys.dart';
 import 'package:jamjam24/main_controller.dart';
 
 import 'components/basic_menu.dart';
@@ -34,7 +35,7 @@ class MainMenu extends GameScriptComponent {
     menu.addEntry(MainMenuEntry.new_game, 'New Game');
     menu.addEntry(MainMenuEntry.show_help, 'Help');
     menu.addEntry(MainMenuEntry.hiscore, 'Hiscore');
-    menu.addEntry(MainMenuEntry.options, 'Options');
+    // menu.addEntry(MainMenuEntry.options, 'Options');
     menu.addEntry(MainMenuEntry.audio_menu, 'Audio Menu');
     menu.addEntry(MainMenuEntry.back_to_title, 'Back to Title');
 
@@ -45,6 +46,8 @@ class MainMenu extends GameScriptComponent {
 
     menu.preselectEntry(_rememberSelection);
     menu.onPreselected = (it) => _rememberSelection = it;
+
+    softkeys('Back', null, (_) => popScreen());
   }
 
   void _selected(MainMenuEntry it) {
@@ -56,11 +59,11 @@ class MainMenu extends GameScriptComponent {
         clear_game_state();
         showScreen(Screen.game);
       case MainMenuEntry.show_help:
-        break;
+        pushScreen(Screen.help);
       case MainMenuEntry.hiscore:
         pushScreen(Screen.hiscore);
       case MainMenuEntry.options:
-        break;
+        pushScreen(Screen.options);
       case MainMenuEntry.audio_menu:
         pushScreen(Screen.audio_menu);
       case MainMenuEntry.back_to_title:

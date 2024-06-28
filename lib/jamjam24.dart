@@ -16,12 +16,12 @@ import 'util/performance.dart';
 
 class JamJam24 extends FlameGame<MainController>
     with HasKeyboardHandlerComponents, Messaging, Shortcuts, HasPerformanceTracker, ScrollDetector {
+  //
   final _ticker = Ticker(ticks: tps);
 
   JamJam24() : super(world: MainController()) {
     game = this;
     images = this.images;
-
     if (kIsWeb) logAnsi = false;
   }
 

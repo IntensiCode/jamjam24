@@ -1,3 +1,4 @@
+import 'package:dart_minilog/dart_minilog.dart';
 import 'package:flame/components.dart';
 
 import '../core/common.dart';
@@ -13,7 +14,7 @@ import 'tile_set.dart';
 class Level extends Component with GameObject {
   int level_number_starting_at_1 = 0;
   int remaining_lines_to_clear = 10;
-  double step_delay_in_seconds = 1;
+  double step_delay_in_seconds = 0;
   final next_tile = PlacedTile();
   final current_tile = PlacedTile();
 
@@ -59,6 +60,7 @@ class Level extends Component with GameObject {
     final config = configuration;
     final step_delay = config.tile_step_delay_in_millis - level_index * config.tile_step_interval_in_millis;
     step_delay_in_seconds = step_delay / 1000;
+    logInfo('level $level_index step_delay_in_seconds = $step_delay_in_seconds');
 
     if (config.adapt_lines_to_clear) {
       final lines_to_clear = config.initial_lines_to_clear + level_index * config.lines_delta_per_level;

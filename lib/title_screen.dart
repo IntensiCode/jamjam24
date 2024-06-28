@@ -42,5 +42,7 @@ class TitleScreen extends GameScriptComponent with HasAutoDisposeShortcuts, Keyb
     onKey('<Escape>', () => pushScreen(Screen.main_menu));
     onKey('<Enter>', () => pushScreen(Screen.game));
     onKey('<Space>', () => pushScreen(Screen.game));
+
+    playAudio('sound/jamjam.ogg');
   }
 }

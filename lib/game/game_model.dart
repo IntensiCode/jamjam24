@@ -178,7 +178,7 @@ class GameModel extends PositionComponent with HasGameData {
 
   @override
   void load_state(GameData data) {
-    _state = GameState.from(data['state']);
+    final update = _state = GameState.from(data['state']);
     propagateToChildren((it) {
       if (it case GameObject go) {
         go.load_state(data[it.runtimeType.toString()]);
@@ -186,6 +186,7 @@ class GameModel extends PositionComponent with HasGameData {
       return true;
     });
     is_new_game = false;
+    state = update;
     logInfo('game state loaded');
   }
 

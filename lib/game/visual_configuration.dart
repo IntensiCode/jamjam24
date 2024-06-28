@@ -7,6 +7,7 @@ const overshoot = -28 * 3.0;
 
 class VisualConfiguration {
   final side_bubbles = 20;
+  final high_ball_y = 3;
 
   final bool container_grid = true;
   final bool touch_buttons = false;

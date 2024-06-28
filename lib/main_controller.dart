@@ -9,6 +9,7 @@ import 'components/gradient_background.dart';
 import 'core/common.dart';
 import 'core/messaging.dart';
 import 'core/screens.dart';
+import 'game/game_configuration.dart';
 import 'game/game_controller.dart';
 import 'help_screen.dart';
 import 'hiscore_screen.dart';
@@ -20,14 +21,11 @@ import 'util/extensions.dart';
 import 'web_play_screen.dart';
 
 extension ComponentExtension on Component {
-  bool can_resume_game() {
-    return findParent<MainController>(includeSelf: true)!._game.model.is_new_game == false;
-  }
+  GameConfiguration get game_configuration => findParent<MainController>(includeSelf: true)!._game.configuration;
 
-  void clear_game_state() {
-    final it = findParent<MainController>(includeSelf: true)!._game.model;
-    it.start_new_game();
-  }
+  bool can_resume_game() => findParent<MainController>(includeSelf: true)!._game.model.is_new_game == false;
+
+  void clear_game_state() => findParent<MainController>(includeSelf: true)!._game.model.start_new_game();
 }
 
 class MainController extends World implements ScreenNavigation {

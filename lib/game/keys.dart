@@ -7,7 +7,7 @@ import '../input/game_keys.dart';
 export '../input/game_keys.dart';
 
 class Keys extends Component with KeyboardHandler, HasGameKeys {
-  static const _do_not_repeat = {GameKey.up, GameKey.fire1, GameKey.fire2, GameKey.soft1, GameKey.soft2};
+  static const _do_not_repeat = {GameKey.fire1, GameKey.fire2, GameKey.soft1, GameKey.soft2};
   static const _repeat_delay_ticks = tps ~/ 4;
   static const _repeat_interval_ticks = tps ~/ 20;
 
