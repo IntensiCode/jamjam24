@@ -1,8 +1,13 @@
+import 'dart:convert';
+
 import 'package:dart_minilog/dart_minilog.dart';
 import 'package:flame/components.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
+import '../components/soft_keys.dart';
 import '../core/screens.dart';
 import '../scripting/game_script.dart';
+import '../util/on_message.dart';
 import 'game_configuration.dart';
 import 'game_model.dart';
 import 'game_play_overlays.dart';
@@ -25,7 +30,7 @@ extension ComponentExtensions on Component {
   bool get show_empty_container => findParent<GameController>(includeSelf: true)!.show_empty_container;
 }
 
-class GameController extends GameScriptComponent {
+class GameController extends GameScriptComponent with HasVisibility {
   final configuration = GameConfiguration();
   final visual = VisualConfiguration();
 
@@ -36,65 +41,134 @@ class GameController extends GameScriptComponent {
 
   bool get show_empty_container => false;
 
+  Future try_restore_state() async {
+    try {
+      final preferences = await SharedPreferences.getInstance();
+      if (preferences.containsKey('game_state')) {
+        final json = preferences.getString('game_state');
+        if (json != null) {
+          logInfo(json);
+          final data = jsonDecode(json);
+          model.load_state(data);
+          if (model.state != GameState.game_over) return;
+        }
+      }
+      model.start_new_game();
+    } catch (it, trace) {
+      logError('Failed to restore game state: $it', trace);
+      // try_clear_state();
+    }
+  }
+
+  void try_store_state() async {
+    try {
+      final preferences = await SharedPreferences.getInstance();
+      final json = jsonEncode(model.save_state({}));
+      logInfo(json);
+      await preferences.setString('game_state', json);
+    } catch (it, trace) {
+      logError('Failed to store game state: $it', trace);
+    }
+  }
+
+  void try_clear_state() async {
+    try {
+      final preferences = await SharedPreferences.getInstance();
+      await preferences.remove('game_state');
+    } catch (it, trace) {
+      logError('Failed to clear game state: $it', trace);
+    }
+  }
+
   // Component
 
   @override
   onLoad() async {
-    add(sprite_drawer);
-    add(GamePlayScreen());
-    add(keys);
-    add(model); // contains particles, which have to be drawn above the GamePlayScreen TODO revisit
-    add(GamePlayOverlays());
+    await add(sprite_drawer);
+    await add(GamePlayScreen());
+    await add(keys);
+    await add(model); // contains particles, which have to be drawn above the GamePlayScreen TODO revisit
+    await add(GamePlayOverlays(_proceed));
   }
 
   @override
   void onMount() {
     super.onMount();
-    // TODO how to do this? start vs resume? where? and how?
-    model.start_new_game();
-  }
-
-  @override
-  void onRemove() {
-    logInfo(model.save_state({}));
-    super.onRemove();
+    onMessage<GameStateUpdate>((it) {
+      switch (it.state) {
+        case GameState.game_paused:
+        case GameState.level_complete:
+        case GameState.confirm_exit:
+          try_store_state();
+        case GameState.game_over:
+          try_clear_state();
+        case GameState.start_game:
+        case GameState.level_info:
+        case GameState.playing_level:
+          break;
+      }
+    });
   }
 
   @override
   void update(double dt) {
+    if (!isVisible) return;
     super.update(dt);
+    // TODO hook/callback instead of polling keys!
     switch (model.state) {
+      // in these states, fire1 and fire2 act as confirm (soft key 2), too:
       case GameState.start_game:
-        if (keys.check_and_consume(GameKey.soft1)) popScreen();
-        if (keys.any([GameKey.fire1, GameKey.fire2, GameKey.soft2])) model.start_playing();
-        break;
       case GameState.level_info:
       case GameState.game_paused:
-        if (keys.check_and_consume(GameKey.soft1)) popScreen();
-        if (keys.any([GameKey.fire1, GameKey.fire2, GameKey.soft2])) model.resume_game();
-        break;
       case GameState.level_complete:
-        if (keys.check_and_consume(GameKey.soft1)) popScreen();
-        if (keys.any([GameKey.fire1, GameKey.fire2, GameKey.soft2])) model.advance_level();
-        break;
+        if (keys.check_and_consume(GameKey.soft1)) _proceed(SoftKey.left);
+        if (keys.any([GameKey.fire1, GameKey.fire2, GameKey.soft2])) _proceed(SoftKey.right);
+
+      // during game play only the explicit "soft keys" work for navigation:
       case GameState.playing_level:
-        if (keys.check_and_consume(GameKey.soft1)) model.confirm_exit();
-        if (keys.check_and_consume(GameKey.soft2)) model.pause_game();
-        break;
       case GameState.game_over:
-        if (keys.check_and_consume(GameKey.soft1)) popScreen();
-        if (keys.check_and_consume(GameKey.soft2)) model.start_new_game();
-        break;
       case GameState.confirm_exit:
-        if (keys.check_and_consume(GameKey.soft1)) popScreen();
-        if (keys.check_and_consume(GameKey.soft2)) model.resume_game();
-        break;
+        if (keys.check_and_consume(GameKey.soft1)) _proceed(SoftKey.left);
+        if (keys.check_and_consume(GameKey.soft2)) _proceed(SoftKey.right);
     }
+  }
+
+  @override
+  void updateTree(double dt) {
+    if (!isVisible) return;
+    super.updateTree(dt);
   }
 
   // Implementation
 
-  void todo() {}
+  void _proceed(SoftKey it) {
+    if (it == SoftKey.left) {
+      switch (model.state) {
+        case GameState.playing_level:
+          model.confirm_exit();
+        default:
+          popScreen();
+      }
+    }
+    if (it == SoftKey.right) {
+      switch (model.state) {
+        case GameState.start_game:
+          model.start_playing();
+        case GameState.level_info:
+          model.start_playing();
+        case GameState.game_paused:
+          model.resume_game();
+        case GameState.level_complete:
+          model.advance_level();
+        case GameState.playing_level:
+          model.pause_game();
+        case GameState.game_over:
+          model.start_new_game();
+        case GameState.confirm_exit:
+          model.resume_game();
+      }
+    }
+  }
 }
 
 //     private int myGameOverWaitTicks = 0;

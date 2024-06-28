@@ -78,6 +78,9 @@ class Extra extends Component with HasGameData, GameParticle, ManagedGameParticl
   }
 
   void apply_extra(PlacedTile tile) {
+    // score once when spawned in container, then again here when caught:
+    player.on_special_extra(_id);
+
     switch (_id) {
       case ExtraId.detonate:
         _on_detonate(tile);
@@ -112,7 +115,7 @@ class Extra extends Component with HasGameData, GameParticle, ManagedGameParticl
   @override
   void load_state(GameData data) {
     super.load_state(data);
-    _id = data['id'];
+    _id = ExtraId.from(data['id']);
     _speed_x = data['speed_x'];
     _speed_y = data['speed_y'];
     _erase_blocks = data['erase_blocks'];
@@ -120,7 +123,7 @@ class Extra extends Component with HasGameData, GameParticle, ManagedGameParticl
 
   @override
   GameData save_state(GameData data) => super.save_state(data
-    ..['id'] = _id
+    ..['id'] = _id.name
     ..['speed_x'] = _speed_x
     ..['speed_y'] = _speed_y
     ..['erase_blocks'] = _erase_blocks);

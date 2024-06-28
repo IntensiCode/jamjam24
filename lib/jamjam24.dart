@@ -4,7 +4,6 @@ import 'package:flame/events.dart';
 import 'package:flame/game.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart' hide Image, Shortcuts;
-import 'package:jamjam24/web_play_screen.dart';
 
 import 'core/common.dart';
 import 'core/messaging.dart';
@@ -18,16 +17,6 @@ import 'util/performance.dart';
 class JamJam24 extends FlameGame<MainController>
     with HasKeyboardHandlerComponents, Messaging, Shortcuts, HasPerformanceTracker, ScrollDetector {
   final _ticker = Ticker(ticks: tps);
-
-  void _showInitialScreen() {
-    if (debug) {
-      world.showScreen(Screen.game);
-    } else if (kIsWeb) {
-      world.add(WebPlayScreen());
-    } else {
-      world.showScreen(Screen.loading, skip_fade_in: true);
-    }
-  }
 
   JamJam24() : super(world: MainController()) {
     game = this;
@@ -68,7 +57,7 @@ class JamJam24 extends FlameGame<MainController>
 
     add(soundboard);
 
-    _showInitialScreen();
+    // _showInitialScreen();
 
     // onKey('m', () => soundboard.toggleMute());
     // onKey('t', () => showScreen(Screen.title));

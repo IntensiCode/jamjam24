@@ -107,17 +107,8 @@ class Level extends Component with GameObject {
 
   @override
   void on_start_playing() {
-    _lines_to_fill_in = (level_number_starting_at_1 - 1) * 2 ~/ 5;
-  }
-
-  @override
-  void on_end_of_level() {
-    // TODO: implement onEndOfLevel
-  }
-
-  @override
-  void on_end_of_game() {
-    // TODO: implement onEndOfGame
+    _lines_to_fill_in = ((level_number_starting_at_1 - 1) * 2) ~/ 5;
+    _lines_to_fill_in = _lines_to_fill_in.clamp(0, configuration.max_fill_in_lines);
   }
 
   // HasGameData

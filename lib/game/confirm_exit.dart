@@ -6,6 +6,6 @@ class ConfirmExit extends GameScriptComponent {
   @override
   onLoad() {
     fontSelect(menuFont);
-    textXY('End game?', xCenter, yCenter);
+    textXY('Back to menu?', xCenter, yCenter);
   }
 }

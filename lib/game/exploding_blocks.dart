@@ -14,12 +14,6 @@ class ExplodingBlocks extends GameParticles<_ExplodingBlock> {
   late final BlockContainer _container;
   late final int _width;
 
-  @override
-  void onMount() {
-    _container = container;
-    _width = _container.width;
-  }
-
   void spawn_at(int aX, int aY, int width) {
     const baseTicks = tps * 3 / 4;
     const tickDuration = baseTicks ~/ 2;
@@ -58,7 +52,11 @@ class ExplodingBlocks extends GameParticles<_ExplodingBlock> {
   }
 
   @override
-  onLoad() async => _ExplodingBlock.container = container;
+  onLoad() async {
+    _container = container;
+    _width = _container.width;
+    _ExplodingBlock.container = container;
+  }
 
   @override
   void render(Canvas canvas) {

@@ -35,4 +35,12 @@ class TitleScreen extends GameScriptComponent with HasAutoDisposeShortcuts, Keyb
 
     fadeInDeep();
   }
+
+  @override
+  void onMount() {
+    super.onMount();
+    onKey('<Escape>', () => pushScreen(Screen.main_menu));
+    onKey('<Enter>', () => pushScreen(Screen.game));
+    onKey('<Space>', () => pushScreen(Screen.game));
+  }
 }

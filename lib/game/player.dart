@@ -1,4 +1,3 @@
-import 'package:dart_minilog/dart_minilog.dart';
 import 'package:flame/components.dart';
 
 import '../core/common.dart';
@@ -33,9 +32,9 @@ class Player extends Component with GameObject {
 
   final active_tile = PlacedTile();
 
-  var _state = PlayerState.waiting;
+  var state = PlayerState.waiting;
 
-  bool get is_blocked => _state == PlayerState.game_over;
+  bool get is_blocked => state == PlayerState.game_over;
 
   void on_new_bomb() => detonators++;
 
@@ -55,7 +54,7 @@ class Player extends Component with GameObject {
   void update(double dt) {
     if (model.state != GameState.playing_level) return;
 
-    switch (_state) {
+    switch (state) {
       case PlayerState.waiting:
         break;
       case PlayerState.playing:
@@ -74,7 +73,7 @@ class Player extends Component with GameObject {
   @override
   void on_start_new_game() {
     active_tile.reset();
-    _state = PlayerState.waiting;
+    state = PlayerState.waiting;
     detonators = configuration.detonators_at_start;
     detonate_timer = 0;
     _slow_down = 0;
@@ -88,6 +87,9 @@ class Player extends Component with GameObject {
     _tile_step_ticks = 0;
   }
 
+  @override
+  void on_resume_game() => _on_next_tile();
+
   // HasGameData
 
   @override
@@ -97,7 +99,7 @@ class Player extends Component with GameObject {
     _slow_down = data['slow_down'];
     _step_delay = data['step_delay'];
     detonate_timer = data['detonate_timer'];
-    _state = PlayerState.from(data['state']);
+    state = PlayerState.from(data['state']);
     _tile_step_ticks = data['tile_step_ticks'];
     active_tile.load_state(data['active_tile']);
     _moved_tile.load_state(data['moved_tile']);
@@ -110,7 +112,7 @@ class Player extends Component with GameObject {
     ..['slow_down'] = _slow_down
     ..['step_delay'] = _step_delay
     ..['detonate_timer'] = detonate_timer
-    ..['state'] = _state
+    ..['state'] = state.name
     ..['tile_step_ticks'] = _tile_step_ticks
     ..['active_tile'] = active_tile.save_state({})
     ..['moved_tile'] = _moved_tile.save_state({});
@@ -184,6 +186,7 @@ class Player extends Component with GameObject {
   void _on_next_tile() {
     if (active_tile.is_still_valid) {
       active_tile.position.set_to(container.start_position);
+      state = PlayerState.playing;
       return;
     }
 
@@ -196,9 +199,7 @@ class Player extends Component with GameObject {
     active_tile.init(level.current_tile, container.start_position);
     _tile_step_ticks = 0;
 
-    logInfo(active_tile);
-
-    _state = container.can_be_placed(active_tile) ? PlayerState.playing : PlayerState.game_over;
+    state = container.can_be_placed(active_tile) ? PlayerState.playing : PlayerState.game_over;
   }
 
   void _move_tile_down() {
@@ -208,7 +209,7 @@ class Player extends Component with GameObject {
     } else {
       container.place_tile(active_tile);
       active_tile.reset();
-      _state = PlayerState.next_tile;
+      state = PlayerState.next_tile;
     }
   }
 
@@ -228,7 +229,7 @@ class Player extends Component with GameObject {
     dropped_tiles.drop(active_tile, drop_interval);
 
     active_tile.reset();
-    _state = PlayerState.next_tile;
+    state = PlayerState.next_tile;
   }
 
   void _detonate_tile() {
@@ -241,7 +242,7 @@ class Player extends Component with GameObject {
     detonate_timer = (configuration.detonate_timer_in_millis * tps ~/ 1000);
 
     active_tile.reset();
-    _state = PlayerState.next_tile;
+    state = PlayerState.next_tile;
   }
 
   bool _move_if_valid(int delta_x, int delta_y, [TileRotation? rotation]) {

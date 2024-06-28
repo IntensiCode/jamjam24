@@ -30,7 +30,10 @@ class LoadingScreen extends GameScriptComponent with HasAutoDisposeShortcuts {
     onKey('<Space>', () => _leave());
   }
 
-  void _leave() => showScreen(Screen.audio_menu, skip_fade_out: true);
+  void _leave() {
+    showScreen(Screen.audio_menu, skip_fade_out: true);
+    removeFromParent();
+  }
 
   Future<SpriteAnimationComponent> _loadAnimation() async {
     final anim = await makeAnimCRXY('psychocell_anim.png', 13, 1, xCenter, yCenter, loop: false, stepTime: 0.05);

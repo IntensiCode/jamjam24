@@ -1,5 +1,6 @@
 import 'package:dart_minilog/dart_minilog.dart';
 import 'package:flame/components.dart';
+import 'package:jamjam24/main_controller.dart';
 
 import 'components/basic_menu.dart';
 import 'core/common.dart';
@@ -28,14 +29,14 @@ class MainMenu extends GameScriptComponent {
     textXY('Main Menu', xCenter, lineHeight * 2, scale: 1.5);
 
     final buttonSheet = await sheetI('button_menu.png', 1, 2);
-    final menu = added(BasicMenu<MainMenuEntry>(buttonSheet, menuFont, _selected)
-    // ..addEntry(MainMenuEntry.resume_game, 'Resume Game')
-      ..addEntry(MainMenuEntry.new_game, 'New Game')
-      ..addEntry(MainMenuEntry.show_help, 'Help')
-      ..addEntry(MainMenuEntry.hiscore, 'Hiscore')
-      ..addEntry(MainMenuEntry.options, 'Options')
-      ..addEntry(MainMenuEntry.audio_menu, 'Audio Menu')
-      ..addEntry(MainMenuEntry.back_to_title, 'Back to Title'));
+    final menu = added(BasicMenu<MainMenuEntry>(buttonSheet, menuFont, _selected));
+    if (can_resume_game()) menu.addEntry(MainMenuEntry.resume_game, 'Resume Game');
+    menu.addEntry(MainMenuEntry.new_game, 'New Game');
+    menu.addEntry(MainMenuEntry.show_help, 'Help');
+    menu.addEntry(MainMenuEntry.hiscore, 'Hiscore');
+    menu.addEntry(MainMenuEntry.options, 'Options');
+    menu.addEntry(MainMenuEntry.audio_menu, 'Audio Menu');
+    menu.addEntry(MainMenuEntry.back_to_title, 'Back to Title');
 
     menu.position.setValues(xCenter, yCenter);
     menu.anchor = Anchor.center;
@@ -50,8 +51,9 @@ class MainMenu extends GameScriptComponent {
     logInfo('Selected: $it');
     switch (it) {
       case MainMenuEntry.resume_game:
-        break;
+        showScreen(Screen.game);
       case MainMenuEntry.new_game:
+        clear_game_state();
         showScreen(Screen.game);
       case MainMenuEntry.show_help:
         break;

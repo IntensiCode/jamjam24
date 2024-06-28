@@ -15,15 +15,7 @@ class Keys extends Component with KeyboardHandler, HasGameKeys {
   final _repeat = <GameKey>{};
   final _repeat_ticks = <GameKey, int>{};
 
-  bool check_and_consume(GameKey key) {
-    final tapped = taps[key];
-    if (tapped != null && tapped > 0) {
-      taps[key] = tapped - 1;
-      _pressed.remove(key); // clear local state, too
-      return true;
-    }
-    return _pressed.remove(key);
-  }
+  bool check_and_consume(GameKey key) => _pressed.remove(key);
 
   bool any(List<GameKey> keys) => keys.count((it) => check_and_consume(it)) > 0;
 

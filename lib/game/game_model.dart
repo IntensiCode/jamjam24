@@ -55,7 +55,7 @@ enum GameState {
   confirm_exit,
   ;
 
-  static GameState from(final String name) => GameState.values.firstWhere((e) => e.toString() == name);
+  static GameState from(final String name) => GameState.values.firstWhere((e) => e.name == name);
 }
 
 class GameStateUpdate with Message {
@@ -82,6 +82,8 @@ class GameModel extends PositionComponent with HasGameData {
 
   GameState get state => _state;
 
+  bool is_new_game = true;
+
   set state(GameState value) {
     logInfo('set state to $value');
     _state = value;
@@ -89,20 +91,20 @@ class GameModel extends PositionComponent with HasGameData {
   }
 
   @override
-  onLoad() {
+  onLoad() async {
     position.setFrom(visual.container_position);
-    add(container = BlockContainer());
-    add(level = Level());
-    add(clear_all = ClearAll());
-    add(detonating_blocks = DetonatingBlocks());
-    add(exploding_lines = ExplodingLines());
-    add(exploding_blocks = ExplodingBlocks());
-    add(dropped_tiles = DroppedTiles());
-    add(player = Player());
-    add(letters = PopUpLetters());
-    add(extras = Extras());
-    add(smoke = SmokeParticles());
-    add(explosions = Explosions());
+    await add(container = BlockContainer());
+    await add(level = Level());
+    await add(clear_all = ClearAll());
+    await add(detonating_blocks = DetonatingBlocks());
+    await add(exploding_lines = ExplodingLines());
+    await add(exploding_blocks = ExplodingBlocks());
+    await add(dropped_tiles = DroppedTiles());
+    await add(player = Player());
+    await add(letters = PopUpLetters());
+    await add(extras = Extras());
+    await add(smoke = SmokeParticles());
+    await add(explosions = Explosions());
   }
 
   bool is_new_hiscore() => hiscore.isNewHiscore(player.score);
@@ -113,6 +115,7 @@ class GameModel extends PositionComponent with HasGameData {
 
   void start_new_game() {
     logInfo('start_new_game');
+    is_new_game = true;
     propagateToChildren((it) {
       if (it case GameObject go) go.on_start_new_game();
       return true;
@@ -142,6 +145,11 @@ class GameModel extends PositionComponent with HasGameData {
   void resume_game() {
     logInfo('resume_game');
     state = GameState.playing_level;
+    logInfo(player.state);
+    propagateToChildren((it) {
+      if (it case GameObject go) go.on_resume_game();
+      return true;
+    });
   }
 
   void advance_level() {
@@ -170,27 +178,29 @@ class GameModel extends PositionComponent with HasGameData {
 
   @override
   void load_state(GameData data) {
-    state = GameState.from(data['state']);
+    _state = GameState.from(data['state']);
     propagateToChildren((it) {
       if (it case GameObject go) {
-        logInfo('load state of ${go.runtimeType}');
         go.load_state(data[it.runtimeType.toString()]);
       }
       return true;
     });
+    is_new_game = false;
+    logInfo('game state loaded');
   }
 
   @override
   GameData save_state(GameData data) {
-    data['state'] = state.name;
+    logInfo('save game state: $_state');
+    data['state'] = GameState.game_paused.name;
     propagateToChildren((it) {
       if (it case GameObject go) {
-        logInfo('save state of ${go.runtimeType}');
         if (data.containsKey(it.runtimeType.toString())) throw '$it already taken';
         data[it.runtimeType.toString()] = go.save_state({});
       }
       return true;
     });
+    logInfo('game state saved');
     return data;
   }
 
@@ -201,7 +211,11 @@ class GameModel extends PositionComponent with HasGameData {
     if (state == GameState.confirm_exit) return;
     if (state == GameState.game_paused) return;
     super.updateTree(dt);
-    if (player.is_blocked) state = GameState.game_over;
-    if (level.is_complete) state = GameState.level_complete;
+    if (state != GameState.game_over && player.is_blocked) {
+      state = GameState.game_over;
+    }
+    if (state != GameState.level_complete && level.is_complete) {
+      state = GameState.level_complete;
+    }
   }
 }

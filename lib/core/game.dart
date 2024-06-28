@@ -54,7 +54,7 @@ enum TileRotation {
   ROTATE_270,
   ;
 
-  static TileRotation from(int value) => TileRotation.values.firstWhere((e) => e.index == value);
+  static TileRotation from(String name) => TileRotation.values.firstWhere((e) => e.name == name);
 
   static TileRotation pick_random() => values[rng.nextInt(values.length)];
 

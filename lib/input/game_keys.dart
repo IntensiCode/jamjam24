@@ -25,10 +25,10 @@ mixin HasGameKeys on KeyboardHandler {
   static final upKeys = ['Arrow Up', 'W'];
   static final fireKeys1 = ['Space', 'J'];
   static final fireKeys2 = ['Enter', 'Shift', 'K'];
-  static final inventoryKeys = ['Tab', 'Home', 'I'];
-  static final useOrExecuteKeys = ['Enter', 'U'];
+  static final inventoryKeys = ['Tab', 'I'];
+  static final useOrExecuteKeys = ['U'];
   static final softKeys1 = ['Control Left', 'F1'];
-  static final softKeys2 = ['Control Right', 'F4'];
+  static final softKeys2 = ['Control Right', 'F2'];
 
   static final mapping = {
     GameKey.left: leftKeys,
@@ -49,7 +49,6 @@ mixin HasGameKeys on KeyboardHandler {
   // held states
 
   final Map<GameKey, bool> held = Map.fromIterable(GameKey.values, value: (_) => false);
-  final Map<GameKey, int> taps = Map.fromIterable(GameKey.values, value: (_) => 0);
 
   bool get alt => keyboard.isAltPressed;
 
@@ -93,8 +92,6 @@ mixin HasGameKeys on KeyboardHandler {
         if (keys.any((it) => labels.contains(it))) {
           held[key] = true;
           onPressed(key);
-          _ticks[key] = _tick;
-          taps.update(key, (it) => it + 1, ifAbsent: () => 1);
         }
       }
     }
@@ -104,36 +101,11 @@ mixin HasGameKeys on KeyboardHandler {
         final key = entry.key;
         final keys = entry.value;
         if (keys.any((it) => labels.contains(it))) {
-          if (_ticks[key] == _tick) {
-            _ticks[key] = -1;
-          } else {
-            held[key] = false;
-            onReleased(key);
-          }
+          held[key] = false;
+          onReleased(key);
         }
       }
     }
     return super.onKeyEvent(event, keysPressed);
   }
-
-  @override
-  void update(double dt) {
-    super.update(dt);
-
-    // on android it seems key up is sent immediately for some keys like space.
-    // to still have other components to "see" the key down, this hack. in
-    // [onKeyEvent], if pressed, the _ticks is set. if released and it's the
-    // same tick, _ticks is set to -1. then next time this update is called
-    // (aka "next tick"), this will trigger the release.
-    final too_quick = _ticks.entries.where((it) => it.value == -1);
-    for (final it in too_quick) {
-      held[it.key] = false;
-      onReleased(it.key);
-      _ticks[it.key] = 0;
-    }
-    _tick++;
-  }
-
-  int _tick = 0;
-  final _ticks = <GameKey, int>{};
 }

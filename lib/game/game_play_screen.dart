@@ -9,19 +9,19 @@ import 'touch_buttons.dart';
 
 class GamePlayScreen extends Component {
   @override
-  onLoad() {
-    add(ColumnBubbles());
-    add(Scoreboard());
-    if (visual.touch_buttons) add(TouchButtons());
-    add(GameDrawer());
+  onLoad() async {
+    await add(ColumnBubbles());
+    await add(Scoreboard());
+    if (visual.touch_buttons) await add(TouchButtons());
+    await add(GameDrawer());
   }
 }
 
 class GameDrawer extends PositionComponent {
   @override
-  onLoad() {
+  onLoad() async {
     position.setFrom(visual.container_position);
-    add(BlockContainerDrawer());
-    add(PlayerDrawer());
+    await add(BlockContainerDrawer());
+    await add(PlayerDrawer());
   }
 }

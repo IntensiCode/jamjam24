@@ -1,6 +1,7 @@
 import 'dart:ui';
 
 import 'package:flame/components.dart';
+import 'package:flame/effects.dart';
 
 import '../core/common.dart';
 
@@ -18,6 +19,7 @@ class GradientBackground extends PositionComponent with HasPaint, HasVisibility 
 
   @override
   render(Canvas canvas) {
+    if ((this as OpacityProvider).opacity == 0) return;
     canvas.drawPaint(paint);
   }
 }

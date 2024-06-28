@@ -9,7 +9,7 @@ import 'input/shortcuts.dart';
 
 class WebPlayScreen extends AutoDisposeComponent with HasAutoDisposeShortcuts {
   @override
-  void onMount() => onKey('<Space>', () => showScreen(Screen.loading));
+  void onMount() => onKey('<Space>', () => _leave());
 
   @override
   onLoad() async {
@@ -22,7 +22,12 @@ class WebPlayScreen extends AutoDisposeComponent with HasAutoDisposeShortcuts {
       fontScale: scale,
       position: Vector2(gameWidth / 2, gameHeight / 2),
       anchor: Anchor.center,
-      onTap: (_) => showScreen(Screen.loading),
+      onTap: (_) => _leave(),
     ));
+  }
+
+  void _leave() {
+    showScreen(Screen.loading);
+    removeFromParent();
   }
 }

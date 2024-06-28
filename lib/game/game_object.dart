@@ -11,6 +11,8 @@ mixin GameObject implements HasGameData {
 
   void on_start_playing() {}
 
+  void on_resume_game() {}
+
   void on_end_of_level() {}
 
   void on_end_of_game() {}
