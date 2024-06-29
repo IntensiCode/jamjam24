@@ -93,10 +93,12 @@ class GameController extends GameScriptComponent with HasVisibility {
   void onMount() {
     super.onMount();
     onMessage<GameStateUpdate>((it) {
+      logInfo('game state update: ${it.state}');
       switch (it.state) {
         case GameState.game_paused:
         case GameState.level_complete:
         case GameState.confirm_exit:
+          logInfo('saving game state');
           try_store_state();
         case GameState.game_over:
         case GameState.hiscore:

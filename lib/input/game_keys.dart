@@ -66,9 +66,9 @@ mixin HasGameKeys on KeyboardHandler {
 
   bool get down => held[GameKey.down] == true;
 
-  bool get primaryFire => held[GameKey.fire1] == true;
+  bool get fire1 => held[GameKey.fire1] == true;
 
-  bool get secondaryFire => held[GameKey.fire2] == true;
+  bool get fire2 => held[GameKey.fire2] == true;
 
   bool get soft1 => held[GameKey.soft1] == true;
 

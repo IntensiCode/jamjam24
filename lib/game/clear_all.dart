@@ -18,8 +18,6 @@ class ClearAll extends Component with GameObject {
 
   void on_line_inserted() => _last_clear_index--;
 
-  void on_line_removed() => _last_clear_index++;
-
   // Component
 
   @override

@@ -30,7 +30,7 @@ class BlockContainerDrawer extends PositionComponent {
 
     for (final (y, row) in container.rows.indexed) {
       for (final (x, block) in row.indexed) {
-        if (block == PlacedBlockId.EMPTY && !visual.container_grid) continue;
+        if (block == PlacedBlockId.EMPTY && !configuration.container_grid) continue;
         sprite_drawer.draw_block_at(canvas, x.toDouble(), y.toDouble(), block);
       }
     }

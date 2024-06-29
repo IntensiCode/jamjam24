@@ -89,7 +89,8 @@ class Player extends Component with GameObject {
   }
 
   @override
-  void on_resume_game() => _on_next_tile();
+  void on_resume_game() => state = PlayerState.playing;
+  // void on_resume_game() => _on_next_tile();
 
   // HasGameData
 

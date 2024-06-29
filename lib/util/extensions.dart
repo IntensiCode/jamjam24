@@ -127,7 +127,7 @@ extension Vector3Extension on Vector3 {
 }
 
 extension SpriteSheetExtensions on SpriteSheet {
-  Sprite by_row(int row, double progress) => getSprite(row, (columns - 1) * progress.toInt());
+  Sprite by_row(int row, double progress) => getSprite(row, ((columns - 1) * progress).toInt());
 
   Sprite by_progress(double progress) => getSpriteById(((columns - 1) * progress).toInt());
 }

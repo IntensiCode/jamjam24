@@ -8,7 +8,8 @@ enum DropHint {
 
 class GameConfiguration {
   bool pure_random = false;
-  bool adapt_lines_to_clear = false;
+  bool container_grid = true;
+  bool adapt_lines_to_clear = true;
   bool explode_lines = true;
   bool key_repeat = true;
   bool key_repeat_slow = false;
@@ -22,12 +23,12 @@ class GameConfiguration {
   int explode_block_time_in_millis = 250;
   int explode_lines_time_in_millis = 100;
   int extra_particles = 4;
-  int initial_lines_to_clear = 10;
+  int initial_lines_to_clear = 9;
   int max_fill_in_lines = 10;
-  int lines_delta_per_level = -1;
+  int lines_delta_per_level = 1;
   int max_lines_to_clear = 20;
   int min_lines_to_clear = 5;
-  int slow_down_in_millis = 3;
+  double slow_down_in_millis = 2;
   int tile_drop_delay_in_millis = 25;
   int tile_step_delay_in_millis = 750;
   int tile_step_interval_in_millis = 50;

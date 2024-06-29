@@ -17,6 +17,7 @@ import 'util/fonts.dart';
 
 enum OptionsMenuEntry {
   drop_hint,
+  grid,
   full_random,
   rotate_can_move,
   rotate_clock_wise,
@@ -26,6 +27,7 @@ class OptionsScreen extends GameScriptComponent with HasAutoDisposeShortcuts, Ke
   static OptionsMenuEntry? _rememberSelection;
 
   late final BasicMenuButton _drop_hint;
+  late final BasicMenuButton _grid;
   late final BasicMenuButton _random;
   late final BasicMenuButton _move;
   late final BasicMenuButton _clockwise;
@@ -38,11 +40,13 @@ class OptionsScreen extends GameScriptComponent with HasAutoDisposeShortcuts, Ke
     final buttonSheet = await sheetI('button_option.png', 1, 2);
     final menu = added(BasicMenu<OptionsMenuEntry>(buttonSheet, textFont, _selected));
     _drop_hint = menu.addEntry(OptionsMenuEntry.drop_hint, 'Drop Hint', anchor: Anchor.centerLeft);
+    _grid = menu.addEntry(OptionsMenuEntry.grid, 'Grid', anchor: Anchor.centerLeft);
     _random = menu.addEntry(OptionsMenuEntry.full_random, 'Full Random', anchor: Anchor.centerLeft);
     _move = menu.addEntry(OptionsMenuEntry.rotate_can_move, 'Rotate Can Move', anchor: Anchor.centerLeft);
     _clockwise = menu.addEntry(OptionsMenuEntry.rotate_clock_wise, 'Rotate Clockwise', anchor: Anchor.centerLeft);
 
     _drop_hint.checked = configuration.drop_hint_mode != DropHint.never;
+    _grid.checked = configuration.container_grid;
     _random.checked = configuration.pure_random;
     _move.checked = configuration.rotate_can_move;
     _clockwise.checked = configuration.rotate_clock_wise;
@@ -67,6 +71,8 @@ class OptionsScreen extends GameScriptComponent with HasAutoDisposeShortcuts, Ke
           DropHint.always => DropHint.never,
           _ => DropHint.always,
         };
+      case OptionsMenuEntry.grid:
+        configuration.container_grid = !configuration.container_grid;
       case OptionsMenuEntry.full_random:
         configuration.pure_random = !configuration.pure_random;
       case OptionsMenuEntry.rotate_can_move:
@@ -75,6 +81,7 @@ class OptionsScreen extends GameScriptComponent with HasAutoDisposeShortcuts, Ke
         configuration.rotate_clock_wise = !configuration.rotate_clock_wise;
     }
     _drop_hint.checked = configuration.drop_hint_mode != DropHint.never;
+    _grid.checked = configuration.container_grid;
     _random.checked = configuration.pure_random;
     _move.checked = configuration.rotate_can_move;
     _clockwise.checked = configuration.rotate_clock_wise;

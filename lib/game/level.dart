@@ -23,10 +23,7 @@ class Level extends Component with GameObject {
 
   bool get is_complete => remaining_lines_to_clear <= 0;
 
-  int score_removed_lines(int count) {
-    remaining_lines_to_clear -= count;
-    return 9 + level_number_starting_at_1 * count * count;
-  }
+  int score_removed_lines(int count) => 9 + level_number_starting_at_1 * count * count;
 
   int score_bonus() => level_number_starting_at_1 * 100;
 
@@ -58,7 +55,9 @@ class Level extends Component with GameObject {
     final level_index = ++level_number_starting_at_1;
 
     final config = configuration;
-    final step_delay = config.tile_step_delay_in_millis - level_index * config.tile_step_interval_in_millis;
+    final speed_up = level_index * config.tile_step_interval_in_millis;
+    logInfo('level $level_index speed_up = $speed_up');
+    final step_delay = config.tile_step_delay_in_millis - speed_up;
     step_delay_in_seconds = step_delay / 1000;
     logInfo('level $level_index step_delay_in_seconds = $step_delay_in_seconds');
 
@@ -68,8 +67,6 @@ class Level extends Component with GameObject {
     } else {
       remaining_lines_to_clear = config.initial_lines_to_clear;
     }
-
-    // rng.setSeed(level_index);
 
     _original_random_tiles.clear();
     if (!next_tile.is_valid_for_placement) on_next_tile();

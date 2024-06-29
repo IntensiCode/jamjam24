@@ -78,19 +78,19 @@ class GamePlayOverlays extends GameScriptComponent {
 
   void _on_level_complete() {
     removeAll(children);
-    add(LevelStatus());
+    add(LevelStatus(_proceed));
     softkeys('Menu', 'Continue', _proceed, shortcuts: false);
   }
 
   void _on_game_over() {
     removeAll(children);
-    add(LevelStatus());
+    add(LevelStatus(_proceed));
     softkeys('Menu', 'New Game', _proceed, shortcuts: false);
   }
 
   void _on_hiscore() {
     removeAll(children);
-    add(LevelStatus());
+    add(LevelStatus(_proceed));
     softkeys('Continue', 'Continue', _proceed, shortcuts: false);
   }
 

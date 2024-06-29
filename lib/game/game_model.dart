@@ -132,6 +132,7 @@ class GameModel extends PositionComponent with HasGameData {
       return true;
     });
     state = GameState.playing_level;
+    is_new_game = false;
   }
 
   void confirm_exit() {
@@ -152,12 +153,14 @@ class GameModel extends PositionComponent with HasGameData {
       if (it case GameObject go) go.on_resume_game();
       return true;
     });
+    is_new_game = false;
   }
 
   void advance_level() {
     logInfo('advance_level');
     level.advance();
     state = GameState.level_info;
+    is_new_game = false;
   }
 
   void on_end_of_level() {
@@ -192,10 +195,15 @@ class GameModel extends PositionComponent with HasGameData {
     logInfo('game state loaded');
   }
 
+  GameState get _state_for_save => switch (state) {
+        GameState.level_complete => GameState.level_complete,
+        _ => GameState.game_paused,
+      };
+
   @override
   GameData save_state(GameData data) {
     logInfo('save game state: $_state');
-    data['state'] = GameState.game_paused.name;
+    data['state'] = _state_for_save.name;
     propagateToChildren((it) {
       if (it case GameObject go) {
         if (data.containsKey(it.runtimeType.toString())) throw '$it already taken';
@@ -226,7 +234,7 @@ class GameModel extends PositionComponent with HasGameData {
         state = GameState.game_over;
       }
     }
-    if (level.is_complete) {
+    if (level.is_complete && state != GameState.level_complete) {
       state = GameState.level_complete;
     }
   }

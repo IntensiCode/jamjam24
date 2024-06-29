@@ -164,9 +164,10 @@ class BlockContainer extends Component with GameObject {
     rows.removeAt(aLineIndex);
     rows.insert(0, _empty_line(size.width));
 
-    clear_all.on_line_removed();
     exploding_blocks.on_line_removed(aLineIndex);
     exploding_lines.on_line_removed(aLineIndex);
+
+    level.remaining_lines_to_clear--;
   }
 
   void clear_exploded_line(int aLineIndex) {

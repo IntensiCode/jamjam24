@@ -1,24 +1,36 @@
+import 'dart:math';
 import 'dart:ui';
 
 import 'package:flame/components.dart';
 
+import '../components/area_explosion.dart';
 import '../core/common.dart';
 import '../core/functions.dart';
+import '../util/extensions.dart';
 import '../util/fonts.dart';
 import 'game_controller.dart';
 import 'game_model.dart';
 
 class Scoreboard extends SpriteComponent {
+  late final _HighlightHiscore _hiscore;
+
   @override
   onLoad() async {
     anchor = Anchor.bottomLeft;
     position.setFrom(visual.scoreboard_position);
     sprite = Sprite(await image('skin_scoreboard.png'));
+    _hiscore = added(_HighlightHiscore()..isVisible = false);
+  }
+
+  @override
+  void update(double dt) {
+    super.update(dt);
+    if (model.is_ranked_score() && !_hiscore.isVisible) _hiscore.isVisible = true;
   }
 
   String get _level => level.level_number_starting_at_1.toString();
 
-  String get _remaining => level.remaining_lines_to_clear.toString();
+  String get _remaining => max(level.remaining_lines_to_clear, 0).toString();
 
   @override
   render(Canvas canvas) {
@@ -59,5 +71,17 @@ class Scoreboard extends SpriteComponent {
       it.tile,
       it.rotation,
     );
+  }
+}
+
+class _HighlightHiscore extends Component with HasVisibility {
+  @override
+  onLoad() async {
+    final it = added(RectangleComponent(
+      position: visual.hiscore_position,
+      size: visual.hiscore_size,
+      paint: Paint()..color = transparent,
+    ));
+    add(Particles(await AreaExplosion.covering(it)));
   }
 }

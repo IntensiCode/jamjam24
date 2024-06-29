@@ -181,8 +181,9 @@ class Extra extends Component with HasGameData, GameParticle, ManagedGameParticl
   void _on_random() {
     _show_extra_info('RANDOM');
 
+    final which = (y < visual.high_ball_trigger) ? ExtraId.random : ExtraId.pick_random();
     final extra = extras.require_particle();
-    extra.init(ExtraId.pick_random(), x, y);
+    extra.init(which, x, y);
 
     if (extra._id == ExtraId.random) {
       soundboard.trigger(Sound.multi_random);
