@@ -1,12 +1,12 @@
 import 'package:dart_minilog/dart_minilog.dart';
 import 'package:flame/components.dart';
-import 'package:jamjam24/components/soft_keys.dart';
-import 'package:jamjam24/main_controller.dart';
 
 import 'components/basic_menu.dart';
+import 'components/soft_keys.dart';
 import 'core/common.dart';
 import 'core/functions.dart';
 import 'core/screens.dart';
+import 'game/game_context.dart';
 import 'scripting/game_script.dart';
 import 'util/extensions.dart';
 import 'util/fonts.dart';
@@ -18,7 +18,6 @@ enum MainMenuEntry {
   hiscore,
   options,
   audio_menu,
-  back_to_title,
 }
 
 class MainMenu extends GameScriptComponent {
@@ -31,13 +30,12 @@ class MainMenu extends GameScriptComponent {
 
     final buttonSheet = await sheetI('button_menu.png', 1, 2);
     final menu = added(BasicMenu<MainMenuEntry>(buttonSheet, menuFont, _selected));
-    if (can_resume_game()) menu.addEntry(MainMenuEntry.resume_game, 'Resume Game');
+    if (can_resume_game) menu.addEntry(MainMenuEntry.resume_game, 'Resume Game');
     menu.addEntry(MainMenuEntry.new_game, 'New Game');
     menu.addEntry(MainMenuEntry.show_help, 'Help');
     menu.addEntry(MainMenuEntry.hiscore, 'Hiscore');
-    // menu.addEntry(MainMenuEntry.options, 'Options');
+    menu.addEntry(MainMenuEntry.options, 'Options');
     menu.addEntry(MainMenuEntry.audio_menu, 'Audio Menu');
-    menu.addEntry(MainMenuEntry.back_to_title, 'Back to Title');
 
     menu.position.setValues(xCenter, yCenter);
     menu.anchor = Anchor.center;
@@ -66,8 +64,8 @@ class MainMenu extends GameScriptComponent {
         pushScreen(Screen.options);
       case MainMenuEntry.audio_menu:
         pushScreen(Screen.audio_menu);
-      case MainMenuEntry.back_to_title:
-        popScreen();
+      default:
+        break;
     }
   }
 }

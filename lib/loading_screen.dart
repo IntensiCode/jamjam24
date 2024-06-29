@@ -23,7 +23,8 @@ class LoadingScreen extends GameScriptComponent with HasAutoDisposeShortcuts {
     at(0.1, () async => anim = await _loadAnimation());
     at(0.0, () => fadeIn(textXY('A', xCenter, yCenter - lineHeight * 4)));
     at(0.0, () => fadeIn(textXY('Game', xCenter, yCenter + lineHeight * 4)));
-    at(2.0, () => scaleTo(anim, 10, 1, Curves.decelerate));
+    at(0.5, () => playAudio('psychocell.ogg'));
+    at(1.5, () => scaleTo(anim, 10, 1, Curves.decelerate));
     at(0.0, () => fadeOutAll());
     at(0.5, () => _leave());
 

@@ -2,15 +2,15 @@ import 'package:collection/collection.dart';
 import 'package:dart_minilog/dart_minilog.dart';
 import 'package:flame/components.dart';
 import 'package:flutter/foundation.dart';
-import 'package:jamjam24/game/game_model.dart';
 
 import 'audio_menu.dart';
 import 'components/gradient_background.dart';
 import 'core/common.dart';
 import 'core/messaging.dart';
 import 'core/screens.dart';
-import 'game/game_configuration.dart';
+import 'enter_hiscore_screen.dart';
 import 'game/game_controller.dart';
+import 'game/game_model.dart';
 import 'help_screen.dart';
 import 'hiscore_screen.dart';
 import 'loading_screen.dart';
@@ -20,19 +20,14 @@ import 'title_screen.dart';
 import 'util/extensions.dart';
 import 'web_play_screen.dart';
 
-extension ComponentExtension on Component {
-  GameConfiguration get game_configuration => findParent<MainController>(includeSelf: true)!._game.configuration;
-
-  bool can_resume_game() => findParent<MainController>(includeSelf: true)!._game.model.is_new_game == false;
-
-  void clear_game_state() => findParent<MainController>(includeSelf: true)!._game.model.start_new_game();
-}
-
-class MainController extends World implements ScreenNavigation {
+class MainController extends World with GameContext implements ScreenNavigation {
   final _stack = <Screen>[];
 
   final GameController _game = GameController()..isVisible = false;
   final GradientBackground _background = GradientBackground();
+
+  @override
+  GameController get game => _game;
 
   @override
   onLoad() async {
@@ -44,7 +39,7 @@ class MainController extends World implements ScreenNavigation {
   @override
   void onMount() {
     if (debug) {
-      _game.try_restore_state().then((_) => showScreen(Screen.game));
+      _game.try_restore_state().then((_) => showScreen(Screen.title));
     } else {
       _game.try_restore_state();
       if (kIsWeb) {
@@ -96,11 +91,10 @@ class MainController extends World implements ScreenNavigation {
 
   Component _makeScreen(Screen it) => switch (it) {
         Screen.audio_menu => AudioMenu(show_back: _stack.isNotEmpty),
-        Screen.controls => throw 'not implemented: $it',
         Screen.game => GameOn(_game),
         Screen.help => HelpScreen(),
         Screen.hiscore => HiscoreScreen(),
-        Screen.keys => throw 'not implemented: $it',
+        Screen.enter_hiscore => EnterHiscoreScreen(),
         Screen.loading => LoadingScreen(),
         Screen.main_menu => MainMenu(),
         Screen.options => OptionsScreen(),

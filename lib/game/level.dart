@@ -55,7 +55,7 @@ class Level extends Component with GameObject {
   final _original_random_tiles = <Tile>[];
 
   void advance() {
-    final level_index = level_number_starting_at_1++;
+    final level_index = ++level_number_starting_at_1;
 
     final config = configuration;
     final step_delay = config.tile_step_delay_in_millis - level_index * config.tile_step_interval_in_millis;

@@ -52,7 +52,7 @@ class JamJam24 extends FlameGame<MainController>
   onLoad() async {
     super.onLoad();
 
-    await soundboard.preload();
+    soundboard.preload();
     await loadFonts(assets);
 
     add(soundboard);

@@ -46,6 +46,8 @@ class GamePlayOverlays extends GameScriptComponent {
         _on_level_complete();
       case GameState.game_over:
         _on_game_over();
+      case GameState.hiscore:
+        _on_hiscore();
       case GameState.confirm_exit:
         _on_confirm_exit();
     }
@@ -84,6 +86,12 @@ class GamePlayOverlays extends GameScriptComponent {
     removeAll(children);
     add(LevelStatus());
     softkeys('Menu', 'New Game', _proceed, shortcuts: false);
+  }
+
+  void _on_hiscore() {
+    removeAll(children);
+    add(LevelStatus());
+    softkeys('Continue', 'Continue', _proceed, shortcuts: false);
   }
 
   void _on_confirm_exit() {

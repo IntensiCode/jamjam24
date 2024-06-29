@@ -3,6 +3,7 @@ import 'package:flame/components.dart';
 
 import '../core/common.dart';
 import '../core/messaging.dart';
+import '../core/soundboard.dart';
 import 'block_container.dart';
 import 'clear_all.dart';
 import 'detonating_blocks.dart';
@@ -11,7 +12,7 @@ import 'exploding_blocks.dart';
 import 'exploding_lines.dart';
 import 'explosions.dart';
 import 'extras.dart';
-import 'game_controller.dart';
+import 'game_context.dart';
 import 'game_object.dart';
 import 'hiscore.dart';
 import 'level.dart';
@@ -51,6 +52,7 @@ enum GameState {
   playing_level,
   game_paused,
   game_over,
+  hiscore,
   level_complete,
   confirm_exit,
   ;
@@ -211,11 +213,20 @@ class GameModel extends PositionComponent with HasGameData {
   void updateTree(double dt) {
     if (state == GameState.confirm_exit) return;
     if (state == GameState.game_paused) return;
+    if (state == GameState.hiscore) return;
+    if (state == GameState.game_over) return;
+
     super.updateTree(dt);
-    if (state != GameState.game_over && player.is_blocked) {
-      state = GameState.game_over;
+
+    if (player.is_blocked) {
+      if (is_new_hiscore() || is_ranked_score()) {
+        soundboard.play(Sound.hiscore);
+        state = GameState.hiscore;
+      } else {
+        state = GameState.game_over;
+      }
     }
-    if (state != GameState.level_complete && level.is_complete) {
+    if (level.is_complete) {
       state = GameState.level_complete;
     }
   }

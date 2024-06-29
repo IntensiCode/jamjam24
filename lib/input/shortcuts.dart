@@ -38,6 +38,8 @@ mixin Shortcuts<T extends World> on HasKeyboardHandlerComponents<T> {
     return Disposable.wrap(() => handlers.remove(handler));
   }
 
+  Function(String) snoop = (it) {};
+
   @override
   KeyEventResult onKeyEvent(
     KeyEvent event,
@@ -47,26 +49,8 @@ mixin Shortcuts<T extends World> on HasKeyboardHandlerComponents<T> {
       return KeyEventResult.skipRemainingHandlers;
     }
     if (event is KeyDownEvent && event.character?.isEmpty == false) {
-      final modifiers = StringBuffer();
-      if (keyboard.isAltPressed) modifiers.write('A-');
-      if (keyboard.isControlPressed) modifiers.write('C-');
-      if (keyboard.isMetaPressed) modifiers.write('M-');
-      if (keyboard.isShiftPressed) modifiers.write('S-');
-
-      final label = event.logicalKey.keyLabel;
-
-      var pattern = event.character ?? label;
-      if (pattern == ' ') pattern = 'Space';
-      pattern = pattern.replaceFirst('Arrow ', '');
-
-      if (label.length > 1) pattern = label;
-
-      final forceMod = keyboard.isAltPressed || keyboard.isControlPressed || keyboard.isMetaPressed;
-      if (modifiers.isNotEmpty && label.length > 1 || forceMod) {
-        pattern = "<$modifiers$pattern>";
-      } else if (pattern.length > 1) {
-        pattern = "<$pattern>";
-      }
+      final pattern = _make_full_shortcut(event);
+      snoop(pattern);
 
       bool handled = false;
       final cloned = [...handlers];
@@ -78,8 +62,9 @@ mixin Shortcuts<T extends World> on HasKeyboardHandlerComponents<T> {
       }
       if (handled) return KeyEventResult.skipRemainingHandlers;
     } else if (event is KeyDownEvent) {
-      var pattern = '<${event.logicalKey.keyLabel}>';
-      pattern = pattern.replaceFirst('Arrow ', '');
+      final pattern = _make_shortcut(event);
+      snoop(pattern);
+
       bool handled = false;
       final cloned = [...handlers];
       for (final it in cloned) {
@@ -91,5 +76,35 @@ mixin Shortcuts<T extends World> on HasKeyboardHandlerComponents<T> {
       if (handled) return KeyEventResult.skipRemainingHandlers;
     }
     return super.onKeyEvent(event, keysPressed);
+  }
+
+  String _make_shortcut(KeyDownEvent event) {
+    var pattern = '<${event.logicalKey.keyLabel}>';
+    pattern = pattern.replaceFirst('Arrow ', '');
+    return pattern;
+  }
+
+  String _make_full_shortcut(KeyDownEvent event) {
+    final modifiers = StringBuffer();
+    if (keyboard.isAltPressed) modifiers.write('A-');
+    if (keyboard.isControlPressed) modifiers.write('C-');
+    if (keyboard.isMetaPressed) modifiers.write('M-');
+    if (keyboard.isShiftPressed) modifiers.write('S-');
+
+    final label = event.logicalKey.keyLabel;
+
+    var pattern = event.character ?? label;
+    if (pattern == ' ') pattern = 'Space';
+    pattern = pattern.replaceFirst('Arrow ', '');
+
+    if (label.length > 1) pattern = label;
+
+    final forceMod = keyboard.isAltPressed || keyboard.isControlPressed || keyboard.isMetaPressed;
+    if (modifiers.isNotEmpty && label.length > 1 || forceMod) {
+      pattern = "<$modifiers$pattern>";
+    } else if (pattern.length > 1) {
+      pattern = "<$pattern>";
+    }
+    return pattern;
   }
 }

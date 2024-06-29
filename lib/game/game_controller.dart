@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:dart_minilog/dart_minilog.dart';
 import 'package:flame/components.dart';
+import 'package:jamjam24/game/hiscore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../components/soft_keys.dart';
@@ -16,19 +17,7 @@ import 'keys.dart';
 import 'sprite_drawer.dart';
 import 'visual_configuration.dart';
 
-extension ComponentExtensions on Component {
-  GameConfiguration get configuration => findParent<GameController>(includeSelf: true)!.configuration;
-
-  VisualConfiguration get visual => findParent<GameController>(includeSelf: true)!.visual;
-
-  Keys get keys => findParent<GameController>(includeSelf: true)!.keys;
-
-  GameModel get model => findParent<GameController>(includeSelf: true)!.model;
-
-  SpriteDrawer get sprite_drawer => findParent<GameController>(includeSelf: true)!.sprite_drawer;
-
-  bool get show_empty_container => findParent<GameController>(includeSelf: true)!.show_empty_container;
-}
+export 'game_context.dart';
 
 class GameController extends GameScriptComponent with HasVisibility {
   final configuration = GameConfiguration();
@@ -41,8 +30,12 @@ class GameController extends GameScriptComponent with HasVisibility {
 
   bool get show_empty_container => false;
 
+  bool _loading = false;
+
   Future try_restore_state() async {
     try {
+      _loading = true;
+
       final preferences = await SharedPreferences.getInstance();
       if (preferences.containsKey('game_state')) {
         final json = preferences.getString('game_state');
@@ -56,12 +49,15 @@ class GameController extends GameScriptComponent with HasVisibility {
       model.start_new_game();
     } catch (it, trace) {
       logError('Failed to restore game state: $it', trace);
-      // try_clear_state();
+    } finally {
+      _loading = false;
     }
   }
 
   void try_store_state() async {
     try {
+      if (_loading) return;
+
       final preferences = await SharedPreferences.getInstance();
       final json = jsonEncode(model.save_state({}));
       logInfo(json);
@@ -72,6 +68,7 @@ class GameController extends GameScriptComponent with HasVisibility {
   }
 
   void try_clear_state() async {
+    logWarn('Clearing game state');
     try {
       final preferences = await SharedPreferences.getInstance();
       await preferences.remove('game_state');
@@ -84,6 +81,7 @@ class GameController extends GameScriptComponent with HasVisibility {
 
   @override
   onLoad() async {
+    await add(hiscore);
     await add(sprite_drawer);
     await add(GamePlayScreen());
     await add(keys);
@@ -101,6 +99,7 @@ class GameController extends GameScriptComponent with HasVisibility {
         case GameState.confirm_exit:
           try_store_state();
         case GameState.game_over:
+        case GameState.hiscore:
           try_clear_state();
         case GameState.start_game:
         case GameState.level_info:
@@ -126,8 +125,9 @@ class GameController extends GameScriptComponent with HasVisibility {
 
       // during game play only the explicit "soft keys" work for navigation:
       case GameState.playing_level:
-      case GameState.game_over:
       case GameState.confirm_exit:
+      case GameState.game_over:
+      case GameState.hiscore:
         if (keys.check_and_consume(GameKey.soft1)) _proceed(SoftKey.left);
         if (keys.check_and_consume(GameKey.soft2)) _proceed(SoftKey.right);
     }
@@ -146,6 +146,8 @@ class GameController extends GameScriptComponent with HasVisibility {
       switch (model.state) {
         case GameState.playing_level:
           model.confirm_exit();
+        case GameState.hiscore:
+          showScreen(Screen.hiscore);
         default:
           popScreen();
       }
@@ -164,117 +166,11 @@ class GameController extends GameScriptComponent with HasVisibility {
           model.pause_game();
         case GameState.game_over:
           model.start_new_game();
+        case GameState.hiscore:
+          showScreen(Screen.enter_hiscore);
         case GameState.confirm_exit:
           model.resume_game();
       }
     }
   }
 }
-
-//     private int myGameOverWaitTicks = 0;
-//
-//     private void onGameOver() throws Exception
-//         {
-//         if ( !isVisible( myLevelStatusScreen ) )
-//             {
-//             system().hooks.trackState( "game", "state", "game over" );
-//
-//             gameModel().endOfGame();
-//             myGameOverWaitTicks = timing().ticksPerSecond / 2;
-//             }
-//
-//         //#if ONLINE
-//         onSubmitScore();
-//         //#else
-//         if ( myGameModel.isNewHiscore() || myGameModel.isRankedScore() )
-//             {
-//             onRankedScore();
-//             }
-//         else
-//             {
-//             mySoftkeys.setSoftkeys( I18n._( "END" ), I18n._( "END" ) );
-//
-//             //#if ADS
-//             if ( !isVisible( myLevelStatusScreen ) ) system().hooks.triggerNewFullscreenAd();
-//             //#endif
-//
-//             setVisibility( myEndGameAlert, false );
-//             setVisibility( myLevelStatusScreen, true );
-//
-//             if ( myGameOverWaitTicks > 0 )
-//                 {
-//                 myGameOverWaitTicks--;
-//                 return;
-//                 }
-//
-//             final KeysHandler keys = keys();
-//             final boolean leftOrRightSoft = keys.checkLeftSoftAndConsume() || keys.checkRightSoftAndConsume();
-//             final boolean stickDownOrFire = keys.checkStickDownAndConsume() || keys.checkFireAndConsume();
-//             if ( leftOrRightSoft || stickDownOrFire )
-//                 {
-//                 //#if RELEASE
-//                 storage().erase( myGameModel );
-//                 //#endif
-//                 stack().popScreen( this );
-//                 }
-//             }
-//         //#endif
-//         }
-//
-//     private void onSubmitScore() throws Exception
-//         {
-//         mySoftkeys.setSoftkeys( I18n._( "CONTINUE" ), I18n._( "SKIP" ) );
-//
-//         setVisibility( myEndGameAlert, false );
-//         setVisibility( myLevelStatusScreen, true );
-//
-//         if ( myGameOverWaitTicks > 0 )
-//             {
-//             myGameOverWaitTicks--;
-//             return;
-//             }
-//
-//         final KeysHandler keys = keys();
-//         final boolean stickDownOrFire = keys.checkStickDownAndConsume() || keys.checkFireAndConsume();
-//         if ( keys.checkLeftSoftAndConsume() || stickDownOrFire )
-//             {
-//             //#if RELEASE
-//             storage().erase( myGameModel );
-//             //#endif
-//             stack().popScreen( this );
-//             myMainLogic.enterHiscore();
-//             }
-//         else if ( keys.checkRightSoftAndConsume() )
-//             {
-//             //#if RELEASE
-//             storage().erase( myGameModel );
-//             //#endif
-//             stack().popScreen( this );
-//             }
-//         }
-//
-//     private void onRankedScore() throws Exception
-//         {
-//         mySoftkeys.setSoftkeys( I18n._( "CONTINUE" ), I18n._( "CONTINUE" ) );
-//
-//         setVisibility( myEndGameAlert, false );
-//         setVisibility( myLevelStatusScreen, true );
-//
-//         if ( myGameOverWaitTicks > 0 )
-//             {
-//             myGameOverWaitTicks--;
-//             return;
-//             }
-//
-//         final KeysHandler keys = keys();
-//         final boolean leftOrRightSoft = keys.checkLeftSoftAndConsume() || keys.checkRightSoftAndConsume();
-//         final boolean stickDownOrFire = keys.checkStickDownAndConsume() || keys.checkFireAndConsume();
-//         if ( leftOrRightSoft || stickDownOrFire )
-//             {
-//             //#if RELEASE
-//             storage().erase( myGameModel );
-//             //#endif
-//             stack().popScreen( this );
-//             myMainLogic.enterHiscore();
-//             }
-//         }

@@ -10,7 +10,7 @@ class AreaExplosion extends ComposedParticle {
   final PositionComponent _area;
   final SpriteAnimation _anim;
 
-  double spawn_interval = 0.1;
+  double spawn_interval = 0.2;
 
   AreaExplosion(this._area, this._anim) : super(children: [], lifespan: 0x40000000);
 
@@ -26,6 +26,8 @@ class AreaExplosion extends ComposedParticle {
     if (_spawn_time <= 0) {
       final pos = Vector2.random(rng)..multiply(_area.size);
       pos.add(_area.position);
+      pos.x -= _area.anchor.x * _area.size.x;
+      pos.y -= _area.anchor.y * _area.size.y;
       children.add(ExplosionParticle.from(_anim, pos));
       _spawn_time += spawn_interval;
     }

@@ -4,11 +4,10 @@ import 'common.dart';
 
 enum Screen {
   audio_menu,
-  controls,
+  enter_hiscore,
   game,
   help,
   hiscore,
-  keys,
   loading,
   main_menu,
   options,

@@ -1,8 +1,13 @@
-import '../core/base_model.dart';
+import 'dart:convert';
+
+import 'package:dart_minilog/dart_minilog.dart';
+import 'package:flame/components.dart';
+import 'package:jamjam24/game/game_object.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 final hiscore = Hiscore();
 
-class Hiscore {
+class Hiscore extends Component with HasGameData {
   static const int max_name_length = 10;
   static const int number_of_entries = 10;
 
@@ -27,25 +32,66 @@ class Hiscore {
       break;
     }
     latestRank = rank;
+
+    try_store_state();
   }
 
-  void restore(dynamic json) {
+  // Component
+
+  @override
+  onLoad() async => await try_restore_state();
+
+  // HasGameData
+
+  @override
+  void load_state(GameData data) {
     entries.clear();
-    entries.addAll(json.map((rank) => HiscoreRank.from(rank)));
+
+    final it = data['entries'] as List<dynamic>;
+    entries.addAll(it.map((it) => HiscoreRank.load(it)));
   }
 
-  dynamic store() => entries.map((HiscoreRank rank) => rank.fields).toList();
+  @override
+  GameData save_state(GameData data) => data..['entries'] = entries.map((it) => it.save_state({})).toList();
+
+  // Implementation
+
+  try_store_state() async {
+    try {
+      final preferences = await SharedPreferences.getInstance();
+      preferences.setString('hiscore', jsonEncode(save_state({})));
+    } catch (it, trace) {
+      logError('Failed to store hiscore: $it', trace);
+    }
+  }
+
+  Future try_restore_state() async {
+    try {
+      final preferences = await SharedPreferences.getInstance();
+      if (preferences.containsKey('hiscore')) {
+        final json = preferences.getString('hiscore');
+        if (json != null) {
+          logInfo(json);
+          load_state(jsonDecode(json));
+        }
+      }
+    } catch (it, trace) {
+      logError('Failed to restore hiscore: $it', trace);
+    }
+  }
 }
 
-class HiscoreRank with BaseModel {
+class HiscoreRank {
   final int score;
   final int level;
   final String name;
 
   HiscoreRank(this.score, this.level, this.name);
 
-  HiscoreRank.from(List fields) : this(fields[0] as int, fields[1] as int, fields[2] as String);
+  HiscoreRank.load(GameData data) : this(data['score'], data['level'], data['name']);
 
-  @override
-  List<dynamic> get fields => [score, level, name];
+  GameData save_state(GameData data) => data
+    ..['score'] = score
+    ..['level'] = level
+    ..['name'] = name;
 }
