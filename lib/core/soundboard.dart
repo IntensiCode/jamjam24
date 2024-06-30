@@ -16,6 +16,7 @@ enum Sound {
   highball,
   hiscore,
   jamjam,
+  level_complete,
   line,
   multi_random,
   placed,
@@ -76,7 +77,7 @@ class Soundboard extends Component {
     volume ??= soundboard.sound;
 
     if (_activeSounds >= _maxActive) {
-      logWarn('sound overload');
+      logVerbose('sound overload');
       return;
     }
 

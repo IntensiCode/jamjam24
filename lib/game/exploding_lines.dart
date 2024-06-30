@@ -14,7 +14,7 @@ class ExplodingLines extends GameParticles<_ExplodingLine> {
     final int tickOffset = (sequence_index - 1) * tps ~/ 8;
     final int tickDuration = (5 - sequence_index) * tps ~/ 8;
     exploding_blocks.spawn_full_row(row, tickOffset, tickDuration);
-    _trigger(row, tickOffset + tickDuration);
+    _trigger(row, tickOffset + tickDuration + tps ~/ 2 + 2);
   }
 
   void _trigger(int aLineIndex, int aTicksFromNow) => require_particle()

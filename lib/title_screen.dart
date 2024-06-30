@@ -1,4 +1,3 @@
-import 'package:dart_minilog/dart_minilog.dart';
 import 'package:flame/components.dart';
 
 import 'components/falling_text.dart';
@@ -28,7 +27,6 @@ class TitleScreen extends GameScriptComponent with HasAutoDisposeShortcuts, Keyb
     ));
 
     await softkeys('Menu', 'Start', (it) {
-      logInfo(it);
       if (it == SoftKey.left) pushScreen(Screen.main_menu);
       if (it == SoftKey.right) pushScreen(Screen.game);
     });

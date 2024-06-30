@@ -52,28 +52,43 @@ class MainController extends World with GameContext implements ScreenNavigation 
 
   @override
   void popScreen() {
-    logInfo('pop screen with stack=$_stack and children=${children.map((it) => it.runtimeType)}');
+    logVerbose('pop screen with stack=$_stack and children=${children.map((it) => it.runtimeType)}');
     _stack.removeLastOrNull();
     showScreen(_stack.lastOrNull ?? Screen.title);
   }
 
   @override
   void pushScreen(Screen it) {
-    logInfo('push screen $it with stack=$_stack and children=${children.map((it) => it.runtimeType)}');
+    logVerbose('push screen $it with stack=$_stack and children=${children.map((it) => it.runtimeType)}');
     if (_stack.lastOrNull == it) throw 'stack already contains $it';
     _stack.add(it);
     showScreen(it);
   }
 
+  Screen? _triggered;
+
   @override
   void showScreen(Screen screen, {bool skip_fade_out = false, bool skip_fade_in = false}) {
-    logInfo('show $screen with $_stack and ${children.map((it) => it.runtimeType)} $skip_fade_out $skip_fade_in');
+    if (_triggered == screen) {
+      logError('duplicate trigger ignored: $screen', StackTrace.current);
+      return;
+    }
+    _triggered = screen;
+
+    logVerbose('show $screen with $_stack and ${children.map((it) => it.runtimeType)} $skip_fade_out $skip_fade_in');
 
     _manage_background(screen);
 
     if (!skip_fade_out && children.length > 2) {
       children.last.fadeOutDeep(and_remove: true);
-      children.last.removed.then((_) => showScreen(screen, skip_fade_in: skip_fade_in));
+      children.last.removed.then((_) {
+        if (_triggered == screen) {
+          _triggered = null;
+        } else if (_triggered != screen) {
+          return;
+        }
+        showScreen(screen, skip_fade_in: skip_fade_in);
+      });
     } else {
       final it = added(_makeScreen(screen));
       if (!skip_fade_in) it.mounted.then((_) => it.fadeInDeep());
@@ -81,7 +96,7 @@ class MainController extends World with GameContext implements ScreenNavigation 
   }
 
   void _manage_background(Screen screen) {
-    logInfo('manage background for $screen');
+    logVerbose('manage background for $screen');
     if (screen == Screen.loading || screen == Screen.game) {
       _background.fadeOutDeep(and_remove: false);
     } else {
@@ -113,7 +128,7 @@ class GameOn extends Component {
       game.model.pause_game();
     }
     game.isVisible = true;
-    logInfo(game.model.state);
+    logVerbose(game.model.state);
   }
 
   @override

@@ -71,7 +71,7 @@ class Hiscore extends Component with HasGameData {
       if (preferences.containsKey('hiscore')) {
         final json = preferences.getString('hiscore');
         if (json != null) {
-          logInfo(json);
+          logVerbose(json);
           load_state(jsonDecode(json));
         }
       }

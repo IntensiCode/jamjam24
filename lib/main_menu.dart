@@ -49,7 +49,7 @@ class MainMenu extends GameScriptComponent {
   }
 
   void _selected(MainMenuEntry it) {
-    logInfo('Selected: $it');
+    logVerbose('Selected: $it');
     switch (it) {
       case MainMenuEntry.resume_game:
         showScreen(Screen.game);

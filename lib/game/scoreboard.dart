@@ -1,7 +1,9 @@
 import 'dart:math';
 import 'dart:ui';
 
+import 'package:dart_minilog/dart_minilog.dart';
 import 'package:flame/components.dart';
+import 'package:jamjam24/game/hiscore.dart';
 
 import '../components/area_explosion.dart';
 import '../core/common.dart';
@@ -25,7 +27,14 @@ class Scoreboard extends SpriteComponent {
   @override
   void update(double dt) {
     super.update(dt);
-    if (model.is_ranked_score() && !_hiscore.isVisible) _hiscore.isVisible = true;
+    final hiscore = model.is_ranked_score();
+    if (hiscore && !_hiscore.isVisible) {
+      logInfo('make hiscore visible');
+      _hiscore.isVisible = true;
+    } else if (!hiscore && _hiscore.isVisible) {
+      logInfo('make hiscore invisible');
+      _hiscore.isVisible = false;
+    }
   }
 
   String get _level => level.level_number_starting_at_1.toString();

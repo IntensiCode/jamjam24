@@ -248,6 +248,7 @@ class Extra extends Component with HasGameData, GameParticle, ManagedGameParticl
     if (y > visual.high_ball_y) return;
     _show_extra_info('HIGH BALL');
     soundboard.trigger(Sound.highball);
+    player.score += 9999;
     extras.drop_all_next_tick = true;
     reset();
   }

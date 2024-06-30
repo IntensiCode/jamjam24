@@ -190,7 +190,7 @@ class BlockContainer extends Component with GameObject {
     size = visual.container_size;
     start_position = IntPosition(size.width ~/ 2, Tile.MAX_TILE_SIZE - 1);
     _reset_container();
-    logInfo('container size: $size, start position: $start_position');
+    logVerbose('container size: $size, start position: $start_position');
   }
 
   void _reset_container() {
@@ -202,17 +202,7 @@ class BlockContainer extends Component with GameObject {
   @override
   void update(double dt) {
     if (!detonating_blocks.is_active) check_full_lines(0, height);
-
-    // no idea why sometimes all exploded rows remain... ‾\_('')_/‾
-    for (int y = 0; y < height; y++) {
-      if (_is_broken_row(y)) {
-        _do_remove_line(y);
-        break;
-      }
-    }
   }
-
-  bool _is_broken_row(int y) => rows[y].every((it) => it == PlacedBlockId.EXPLODED);
 
   // GameObject
 

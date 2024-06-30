@@ -9,11 +9,10 @@ import '../scripting/game_script.dart';
 import '../util/extensions.dart';
 import '../util/fonts.dart';
 import 'game_controller.dart';
-import 'game_model.dart';
 import 'keys.dart';
 
-class LevelStatus extends GameScriptComponent with KeyboardHandler, HasGameKeys {
-  LevelStatus(this._proceed);
+class GameResult extends GameScriptComponent with KeyboardHandler, HasGameKeys {
+  GameResult(this._proceed);
 
   final void Function(SoftKey) _proceed;
 
@@ -22,10 +21,7 @@ class LevelStatus extends GameScriptComponent with KeyboardHandler, HasGameKeys 
   @override
   onLoad() async {
     fontSelect(menuFont);
-    if (model.state == GameState.level_complete) {
-      textXY('Level Complete', xCenter, yCenter);
-    }
-    if (model.state == GameState.hiscore) {
+    if (model.is_ranked_score()) {
       final box = added(RectangleComponent(
         position: Vector2(xCenter, yCenter),
         size: Vector2(gameWidth * 2 / 3, gameHeight / 4),
@@ -34,8 +30,7 @@ class LevelStatus extends GameScriptComponent with KeyboardHandler, HasGameKeys 
       ));
       textXY('Hiscore!', xCenter, yCenter);
       add(Particles(await AreaExplosion.covering(box))..priority = -10);
-    }
-    if (model.state == GameState.game_over) {
+    } else {
       textXY('Game Over', xCenter, yCenter);
     }
   }

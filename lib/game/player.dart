@@ -12,13 +12,11 @@ import 'placed_tile.dart';
 import 'tile.dart';
 
 enum PlayerState {
-  waiting,
   playing,
   next_tile,
   game_over;
 
-  static PlayerState from(final String name) =>
-      PlayerState.values.firstWhere((e) => e.toString() == name, orElse: () => PlayerState.waiting);
+  static PlayerState from(final String name) => PlayerState.values.firstWhere((e) => e.name == name);
 }
 
 class Player extends Component with GameObject {
@@ -33,7 +31,7 @@ class Player extends Component with GameObject {
 
   final active_tile = PlacedTile();
 
-  var state = PlayerState.waiting;
+  var state = PlayerState.playing;
 
   bool get is_blocked => state == PlayerState.game_over;
 
@@ -56,8 +54,6 @@ class Player extends Component with GameObject {
     if (model.state != GameState.playing_level) return;
 
     switch (state) {
-      case PlayerState.waiting:
-        break;
       case PlayerState.playing:
         _on_playing();
       case PlayerState.next_tile:
@@ -73,24 +69,30 @@ class Player extends Component with GameObject {
 
   @override
   void on_start_new_game() {
+    logInfo('on_start_new_game');
     active_tile.reset();
-    state = PlayerState.waiting;
+    state = PlayerState.playing;
     detonators = configuration.detonators_at_start;
     detonate_timer = 0;
     _slow_down = 0;
+    _tile_step_ticks = 0;
     score = 0;
   }
 
   @override
-  void on_start_playing() {
-    _on_next_tile();
-    detonators++;
-    _tile_step_ticks = 0;
+  void on_resume_game() {
+    logInfo('on_resume_game');
+    state = PlayerState.playing;
+    // _on_next_tile();
   }
 
   @override
-  void on_resume_game() => state = PlayerState.playing;
-  // void on_resume_game() => _on_next_tile();
+  void on_start_playing() {
+    logInfo('on_start_playing');
+    super.on_start_playing();
+    state = PlayerState.playing;
+    _on_next_tile();
+  }
 
   // HasGameData
 
@@ -126,24 +128,21 @@ class Player extends Component with GameObject {
       active_tile.draw_drop_guide = true;
     }
 
+    if (!active_tile.is_still_valid) return;
+
     _control_using_keys();
 
-    if (active_tile.is_still_valid && active_tile.draw_drop_guide) {
-      _update_drop_guide();
-    }
+    if (active_tile.draw_drop_guide) _update_drop_guide();
 
-    if (active_tile.is_still_valid) {
-      if (keys.check_and_consume(GameKey.fire1)) _drop_tile();
-      if (keys.check_and_consume(GameKey.fire2)) _detonate_tile();
-    }
+    if (keys.check_and_consume(GameKey.fire1)) _drop_tile();
+    if (keys.check_and_consume(GameKey.fire2)) _detonate_tile();
 
-    if (active_tile.is_still_valid) {
-      _update_step_delay();
-      if (_tile_step_ticks < _step_delay) {
-        _tile_step_ticks++;
-      } else {
-        _move_tile_down();
-      }
+    _update_step_delay();
+
+    if (_tile_step_ticks < _step_delay) {
+      _tile_step_ticks++;
+    } else {
+      _move_tile_down();
     }
   }
 

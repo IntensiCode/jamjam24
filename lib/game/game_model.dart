@@ -20,6 +20,8 @@ import 'player.dart';
 import 'pop_up_letters.dart';
 import 'smoke.dart';
 
+class LevelComplete with Message {}
+
 extension ComponentExtensions on Component {
   BlockContainer get container => model.container;
 
@@ -48,12 +50,9 @@ extension ComponentExtensions on Component {
 
 enum GameState {
   start_game,
-  level_info,
   playing_level,
   game_paused,
   game_over,
-  hiscore,
-  level_complete,
   confirm_exit,
   ;
 
@@ -87,7 +86,7 @@ class GameModel extends PositionComponent with HasGameData {
   bool is_new_game = true;
 
   set state(GameState value) {
-    logInfo('set state to $value');
+    logVerbose('set state to $value');
     _state = value;
     sendMessage(GameStateUpdate(value));
   }
@@ -126,13 +125,14 @@ class GameModel extends PositionComponent with HasGameData {
   }
 
   void start_playing() {
-    logInfo('start_level');
+    logInfo('start_playing');
+    state = GameState.playing_level;
+    is_new_game = false;
+
     propagateToChildren((it) {
       if (it case GameObject go) go.on_start_playing();
       return true;
     });
-    state = GameState.playing_level;
-    is_new_game = false;
   }
 
   void confirm_exit() {
@@ -153,13 +153,6 @@ class GameModel extends PositionComponent with HasGameData {
       if (it case GameObject go) go.on_resume_game();
       return true;
     });
-    is_new_game = false;
-  }
-
-  void advance_level() {
-    logInfo('advance_level');
-    level.advance();
-    state = GameState.level_info;
     is_new_game = false;
   }
 
@@ -195,15 +188,10 @@ class GameModel extends PositionComponent with HasGameData {
     logInfo('game state loaded');
   }
 
-  GameState get _state_for_save => switch (state) {
-        GameState.level_complete => GameState.level_complete,
-        _ => GameState.game_paused,
-      };
-
   @override
   GameData save_state(GameData data) {
     logInfo('save game state: $_state');
-    data['state'] = _state_for_save.name;
+    data['state'] = GameState.game_paused.name;
     propagateToChildren((it) {
       if (it case GameObject go) {
         if (data.containsKey(it.runtimeType.toString())) throw '$it already taken';
@@ -221,21 +209,26 @@ class GameModel extends PositionComponent with HasGameData {
   void updateTree(double dt) {
     if (state == GameState.confirm_exit) return;
     if (state == GameState.game_paused) return;
-    if (state == GameState.hiscore) return;
     if (state == GameState.game_over) return;
 
     super.updateTree(dt);
 
     if (player.is_blocked) {
+      is_new_game = true;
+      state = GameState.game_over;
       if (is_new_hiscore() || is_ranked_score()) {
         soundboard.play(Sound.hiscore);
-        state = GameState.hiscore;
-      } else {
-        state = GameState.game_over;
       }
+    } else if (level.is_complete) {
+      _advance_level();
+      sendMessage(LevelComplete());
     }
-    if (level.is_complete && state != GameState.level_complete) {
-      state = GameState.level_complete;
-    }
+  }
+
+  void _advance_level() {
+    logInfo('advance_level');
+    level.advance();
+    soundboard.play(Sound.level_complete);
+    is_new_game = false;
   }
 }

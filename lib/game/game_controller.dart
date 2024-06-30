@@ -40,7 +40,7 @@ class GameController extends GameScriptComponent with HasVisibility {
       if (preferences.containsKey('game_state')) {
         final json = preferences.getString('game_state');
         if (json != null) {
-          logInfo(json);
+          logVerbose(json);
           final data = jsonDecode(json);
           model.load_state(data);
           if (model.state != GameState.game_over) return;
@@ -60,7 +60,7 @@ class GameController extends GameScriptComponent with HasVisibility {
 
       final preferences = await SharedPreferences.getInstance();
       final json = jsonEncode(model.save_state({}));
-      logInfo(json);
+      logVerbose(json);
       await preferences.setString('game_state', json);
     } catch (it, trace) {
       logError('Failed to store game state: $it', trace);
@@ -92,19 +92,17 @@ class GameController extends GameScriptComponent with HasVisibility {
   @override
   void onMount() {
     super.onMount();
+    onMessage<LevelComplete>((_) => try_store_state());
     onMessage<GameStateUpdate>((it) {
-      logInfo('game state update: ${it.state}');
+      logVerbose('game state update: ${it.state}');
       switch (it.state) {
         case GameState.game_paused:
-        case GameState.level_complete:
         case GameState.confirm_exit:
-          logInfo('saving game state');
+          logVerbose('saving game state');
           try_store_state();
         case GameState.game_over:
-        case GameState.hiscore:
           try_clear_state();
         case GameState.start_game:
-        case GameState.level_info:
         case GameState.playing_level:
           break;
       }
@@ -119,9 +117,7 @@ class GameController extends GameScriptComponent with HasVisibility {
     switch (model.state) {
       // in these states, fire1 and fire2 act as confirm (soft key 2), too:
       case GameState.start_game:
-      case GameState.level_info:
       case GameState.game_paused:
-      case GameState.level_complete:
         if (keys.check_and_consume(GameKey.soft1)) _proceed(SoftKey.left);
         if (keys.any([GameKey.fire1, GameKey.fire2, GameKey.soft2])) _proceed(SoftKey.right);
 
@@ -129,7 +125,6 @@ class GameController extends GameScriptComponent with HasVisibility {
       case GameState.playing_level:
       case GameState.confirm_exit:
       case GameState.game_over:
-      case GameState.hiscore:
         if (keys.check_and_consume(GameKey.soft1)) _proceed(SoftKey.left);
         if (keys.check_and_consume(GameKey.soft2)) _proceed(SoftKey.right);
     }
@@ -148,8 +143,12 @@ class GameController extends GameScriptComponent with HasVisibility {
       switch (model.state) {
         case GameState.playing_level:
           model.confirm_exit();
-        case GameState.hiscore:
-          showScreen(Screen.hiscore);
+        case GameState.game_over:
+          if (model.is_new_hiscore() || model.is_ranked_score()) {
+            showScreen(Screen.hiscore);
+          } else {
+            popScreen();
+          }
         default:
           popScreen();
       }
@@ -158,18 +157,16 @@ class GameController extends GameScriptComponent with HasVisibility {
       switch (model.state) {
         case GameState.start_game:
           model.start_playing();
-        case GameState.level_info:
-          model.start_playing();
         case GameState.game_paused:
           model.resume_game();
-        case GameState.level_complete:
-          model.advance_level();
         case GameState.playing_level:
           model.pause_game();
         case GameState.game_over:
-          model.start_new_game();
-        case GameState.hiscore:
-          showScreen(Screen.enter_hiscore);
+          if (model.is_new_hiscore() || model.is_ranked_score()) {
+            showScreen(Screen.enter_hiscore);
+          } else {
+            model.start_new_game();
+          }
         case GameState.confirm_exit:
           model.resume_game();
       }

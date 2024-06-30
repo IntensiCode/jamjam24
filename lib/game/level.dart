@@ -70,6 +70,9 @@ class Level extends Component with GameObject {
 
     _original_random_tiles.clear();
     if (!next_tile.is_valid_for_placement) on_next_tile();
+
+    _lines_to_fill_in = ((level_number_starting_at_1 - 1) * 2) ~/ 5;
+    _lines_to_fill_in = _lines_to_fill_in.clamp(0, configuration.max_fill_in_lines);
   }
 
   void fill_in_full_row() {
@@ -96,18 +99,13 @@ class Level extends Component with GameObject {
 
   @override
   void on_start_new_game() {
+    logInfo('on_start_new_game');
     level_number_starting_at_1 = 0;
     current_tile.reset();
     next_tile.reset();
     remaining_lines_to_clear = 0;
     step_delay_in_seconds = 0;
     advance();
-  }
-
-  @override
-  void on_start_playing() {
-    _lines_to_fill_in = ((level_number_starting_at_1 - 1) * 2) ~/ 5;
-    _lines_to_fill_in = _lines_to_fill_in.clamp(0, configuration.max_fill_in_lines);
   }
 
   // HasGameData

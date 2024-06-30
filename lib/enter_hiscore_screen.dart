@@ -1,3 +1,5 @@
+import 'package:dart_minilog/dart_minilog.dart';
+
 import 'components/soft_keys.dart';
 import 'core/common.dart';
 import 'core/screens.dart';
@@ -10,6 +12,8 @@ import 'util/fonts.dart';
 class EnterHiscoreScreen extends GameScriptComponent with HasAutoDisposeShortcuts {
   @override
   onLoad() {
+    logInfo('ENTERHISCORESCREEN');
+
     fontSelect(textFont);
     textXY('You made it into the', xCenter, lineHeight * 2);
     fontSelect(menuFont);
@@ -35,6 +39,7 @@ class EnterHiscoreScreen extends GameScriptComponent with HasAutoDisposeShortcut
       if (it == SoftKey.left) {
         popScreen(); // TODO confirm
       } else if (it == SoftKey.right && name.isNotEmpty) {
+        shortcuts.snoop = (_) {};
         hiscore.insert(player.score, level.level_number_starting_at_1, name);
         showScreen(Screen.hiscore);
       }
@@ -48,6 +53,7 @@ class EnterHiscoreScreen extends GameScriptComponent with HasAutoDisposeShortcut
       } else if (it == '<Backspace>' && name.isNotEmpty) {
         name = name.substring(0, name.length - 1);
       } else if (it == '<Enter>' && name.isNotEmpty) {
+        shortcuts.snoop = (_) {};
         hiscore.insert(player.score, level.level_number_starting_at_1, name);
         showScreen(Screen.hiscore);
       }

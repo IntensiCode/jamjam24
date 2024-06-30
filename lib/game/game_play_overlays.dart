@@ -20,6 +20,8 @@ class GamePlayOverlays extends GameScriptComponent {
     super.onLoad();
     onMessage<GameStateUpdate>((it) => _on_game_state(it.state));
     _on_game_state(model.state);
+
+    onMessage<LevelComplete>((_) => _on_level_info());
   }
 
   @override
@@ -32,22 +34,20 @@ class GamePlayOverlays extends GameScriptComponent {
 
   void _on_game_state(GameState it) {
     seen = it;
-    logInfo('on_game_state: $it');
+    logVerbose('on_game_state: $it');
     switch (it) {
       case GameState.start_game:
         _on_start_new_game();
-      case GameState.level_info:
-        _on_level_info();
       case GameState.playing_level:
         _on_playing_game();
       case GameState.game_paused:
         _on_pause_game();
-      case GameState.level_complete:
-        _on_level_complete();
       case GameState.game_over:
-        _on_game_over();
-      case GameState.hiscore:
-        _on_hiscore();
+        if (model.is_ranked_score()) {
+          _on_hiscore();
+        } else {
+          _on_game_over();
+        }
       case GameState.confirm_exit:
         _on_confirm_exit();
     }
@@ -62,7 +62,6 @@ class GamePlayOverlays extends GameScriptComponent {
   void _on_level_info() {
     removeAll(children);
     add(LevelInfo());
-    softkeys('Menu', 'Continue', _proceed, shortcuts: false);
   }
 
   void _on_playing_game() {
@@ -76,21 +75,15 @@ class GamePlayOverlays extends GameScriptComponent {
     softkeys('Menu', 'Continue', _proceed, shortcuts: false);
   }
 
-  void _on_level_complete() {
-    removeAll(children);
-    add(LevelStatus(_proceed));
-    softkeys('Menu', 'Continue', _proceed, shortcuts: false);
-  }
-
   void _on_game_over() {
     removeAll(children);
-    add(LevelStatus(_proceed));
+    add(GameResult(_proceed));
     softkeys('Menu', 'New Game', _proceed, shortcuts: false);
   }
 
   void _on_hiscore() {
     removeAll(children);
-    add(LevelStatus(_proceed));
+    add(GameResult(_proceed));
     softkeys('Continue', 'Continue', _proceed, shortcuts: false);
   }
 

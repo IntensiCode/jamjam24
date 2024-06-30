@@ -68,7 +68,7 @@ mixin AutoDispose on Component {
   @override
   void onRemove() {
     super.onRemove();
-    logInfo('onRemove for $runtimeType');
+    logVerbose('onRemove for $runtimeType');
     disposeAllDeep();
   }
 
