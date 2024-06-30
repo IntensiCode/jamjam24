@@ -24,7 +24,7 @@ class GameConfiguration {
   int explode_lines_time_in_millis = 100;
   int extra_particles = 4;
   int initial_lines_to_clear = 9;
-  int max_fill_in_lines = 10;
+  int max_fill_in_lines = 20;
   int lines_delta_per_level = 1;
   int max_lines_to_clear = 20;
   int min_lines_to_clear = 5;

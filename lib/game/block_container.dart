@@ -160,7 +160,7 @@ class BlockContainer extends Component with GameObject {
     exploding_blocks.spawn_at(aX, aY, width);
   }
 
-  void do_remove_line(int aLineIndex) {
+  void _do_remove_line(int aLineIndex) {
     rows.removeAt(aLineIndex);
     rows.insert(0, _empty_line(size.width));
 
@@ -180,7 +180,7 @@ class BlockContainer extends Component with GameObject {
         dirty = true;
       }
     }
-    if (!dirty) do_remove_line(aLineIndex);
+    if (!dirty) _do_remove_line(aLineIndex);
   }
 
   // Component
@@ -202,7 +202,17 @@ class BlockContainer extends Component with GameObject {
   @override
   void update(double dt) {
     if (!detonating_blocks.is_active) check_full_lines(0, height);
+
+    // no idea why sometimes all exploded rows remain... ‾\_('')_/‾
+    for (int y = 0; y < height; y++) {
+      if (_is_broken_row(y)) {
+        _do_remove_line(y);
+        break;
+      }
+    }
   }
+
+  bool _is_broken_row(int y) => rows[y].every((it) => it == PlacedBlockId.EXPLODED);
 
   // GameObject
 
